@@ -66,7 +66,6 @@ contract Crowdsale {
 	  multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
 	  owner = msg.sender;
 	  minInvestETH = 100 finney; // approx 1 USD
-	  minInvestBTC = 100000;     // approx 1 USD
 	  startBlock = 1 ;            // now (testnet)
 	  endBlock =  1578450;        // ever (testnet) startdate + 30 days
 	  RLCPerBTC = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
