@@ -4,7 +4,6 @@ import "./SafeMath.sol";
 import "./ERC20.sol";
 import "./TokenSpender.sol";
 
-
 contract RLC is ERC20, SafeMath, Ownable {
 
     /* Public variables of the token */
