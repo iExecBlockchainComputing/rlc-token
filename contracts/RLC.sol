@@ -1,4 +1,5 @@
 pragma solidity ^0.4.8;
+
 import "./Ownable.sol";
 import "./SafeMath.sol";
 import "./ERC20.sol";

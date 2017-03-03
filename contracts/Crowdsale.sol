@@ -1,5 +1,8 @@
 pragma solidity ^0.4.8;
 
+import "./SafeMath.sol";
+import "./RLC.sol";
+
 /*
   
   Crowdsale Smart Contract for the iEx.ec project
@@ -9,11 +12,6 @@ pragma solidity ^0.4.8;
   Thanks to BeyondTheVoid who helped us shaping this code.
 
  */
-contract Token {
-	function balanceOf(address user) constant returns (uint256 balance);
-	function transfer(address receiver, uint amount) returns(bool);
-}
-
 
 contract Crowdsale {
 
@@ -28,7 +26,7 @@ contract Crowdsale {
 	  uint rlcToSend;   	// rlc to distribute when the min cap is reached
 	}
 
-	Token 	public RLC;         // RLC contract reference
+	RLC 	public rlc;         // RLC contract reference
 	address public owner;       // Contract owner (iEx.ec team)
 	address public multisigETH; // Multisig contract that will receive the ETH
 	uint public RLCPerETH;      // Number of RLC per ETH
@@ -58,25 +56,26 @@ contract Crowdsale {
 	event BTCReceived(string,address);
 
 	// Constructor of the contract.
-	function Crowdsale() {
+	function Crowdsale(address _token) {
 		
 	  //set the different variables
 	  owner = msg.sender;
-	  RLC = Token(0x0a8f269d52fad5f0f6297a264f48cbb290c68130); 	// RLC contract address
+	  rlc = RLC(_token); 	// RLC contract address
 	  multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
-	  owner = msg.sender;
 	  minInvestETH = 100 finney; // approx 1 USD
 	  startBlock = 1 ;            // now (testnet)
 	  endBlock =  1578450;        // ever (testnet) startdate + 30 days
 	  RLCPerBTC = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  RLCPerETH = 5000;          // FIXME
 	  minCap=10;
+	  maxCap=80000000000;
 	}
 
 	// The anonymous function corresponds to a donation in ETH
 	function(){
 	  receiveETH(msg.sender);
 	}
+	
 	
 	function receiveETH(address beneficiary) payable{
 	  //don't accept funding under a predefined treshold
@@ -111,14 +110,12 @@ contract Crowdsale {
 	// When the minimum cap is reached, RLC are moved to a specific address
 	function withdrawRLC(address to, uint amount) onlyBy(owner){
 	  if (!minCapReached) throw;
-	  RLC.transfer(to, amount);
+	  rlc.transfer(to, amount);
 	}
 
 	/*
 	  Compute the RLC bonus
-	  
 	*/
-	
 	function bonus(uint amount) returns (uint) {
 	  if (now < (startBlock + 10 days)) return (amount + amount/5);
 	  if (now < startBlock + 20 days) return (amount + amount/10);
@@ -128,9 +125,8 @@ contract Crowdsale {
 	  Transfer RLC to backers
 	  Assumes that the owner of the token contract and the crowdsale contract is the same
 	 */
-	
 	function transferRLC(address to, uint amount) internal returns (bool) {
-	  return RLC.transfer(to, amount);
+	  return rlc.transfer(to, amount);
 	}
 }
 
