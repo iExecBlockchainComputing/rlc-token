@@ -69,6 +69,8 @@ contract Crowdsale {
 	  RLCPerETH = 5000;          // FIXME
 	  minCap=10;
 	  maxCap=80000000000;
+	  minCapReached=false;
+	  maxCapReached=false;
 	}
 
 	// The anonymous function corresponds to a donation in ETH
