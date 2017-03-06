@@ -1,5 +1,4 @@
 pragma solidity ^0.4.8;
-
 import "./SafeMath.sol";
 import "./RLC.sol";
 
@@ -14,6 +13,9 @@ import "./RLC.sol";
  */
 
 contract Crowdsale {
+
+	// temp logs
+	event Logs(address indexed from, uint amount, string value);
 
   	struct BackerETH {
 	  uint weiReceived;	// Amount of ETH given
@@ -35,6 +37,7 @@ contract Crowdsale {
 	uint public receivedBTC;    // Number of BTC received
 	uint public RLCSentToETH;   // Number of RLC sent to ETH contributors
 	uint public RLCSentToBTC;   // Number of RLC sent to BTC contributors
+	uint public RLCVariable;	// Number of RLC emitted 
 	uint public startBlock;     // Crowdsale start block
 	uint public endBlock;       // Crowdsale end block
 	uint public minCap;         // Minimum number of RLC to distribute
@@ -42,7 +45,16 @@ contract Crowdsale {
 	bool public minCapReached;  // Min cap has been reached
 	bool public maxCapReached;  // Max cap has been reached
 	uint public minInvestETH;   // Minimum amount to invest
+	uint public minInvestBTC;   // Minimum amount to invest
+	
+	address public bounty;		// address at which the bounty RLC will be sent
+	address public contingency; // address at which the RLC contingency reserve will be sent
+	address public team;	// address at which the RLC contingency reserve will be sent
 
+	uint public rlc_bounty;		// amount of bounties RLC
+	uint public rlc_contingency;// amount of the RLC contingency reserve
+	uint public rlc_team;	// amount of the RLC contingency reserve
+	
 	mapping(address => BackerETH) public backersETH; //backersETH indexed by their ETH address
 	mapping(address => BackerBTC) public backersBTC; //backersBTC indexed by their (BTC,ETH) address
 
@@ -60,31 +72,35 @@ contract Crowdsale {
 		
 	  //set the different variables
 	  owner = msg.sender;
+	  //RLC = Token(0x0a8f269d52fad5f0f6297a264f48cbb290c68130); 	// RLC contract address
 	  rlc = RLC(_token); 	// RLC contract address
 	  multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
+	  RLCSentToETH = 0;
 	  minInvestETH = 100 finney; // approx 1 USD
-	  startBlock = 1 ;            // now (testnet)
-	  endBlock =  1578450;        // ever (testnet) startdate + 30 days
+	  minInvestBTC = 100000;     // approx 1 USD
+	  startBlock = now ;            // now (testnet)
+	  endBlock =  now + 1578450;        // ever (testnet) startdate + 30 days
 	  RLCPerBTC = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  RLCPerETH = 5000;          // FIXME
-	  minCap=10;
-	  maxCap=80000000000;
-	  minCapReached=false;
-	  maxCapReached=false;
+	  minCap=12000000000000000;
+	  maxCap=60000000000000000;
+	  rlc_bounty=5000000000000000;		
+	  rlc_contingency=5000000000000000;
+	  rlc_team=12000000000000000;
+	  RLCVariable = rlc_bounty + rlc_contingency + rlc_team;
 	}
 
 	// The anonymous function corresponds to a donation in ETH
-	function(){
+	function() payable	{
 	  receiveETH(msg.sender);
 	}
 	
-	
 	function receiveETH(address beneficiary) payable{
 	  //don't accept funding under a predefined treshold
-	  if (msg.value < minInvestETH) throw;
+	  if (msg.value < minInvestETH) throw;  
 
 	  // if we are in the correct time slot
-	  if ((now > startBlock) || (now < endBlock )) throw;  
+	  if ((now < startBlock) || (now > endBlock )) throw;  
 
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((msg.value*RLCPerETH)/(1 ether));
@@ -93,14 +109,22 @@ contract Crowdsale {
 	  BackerETH backer = backersETH[beneficiary];
 	  backer.weiReceived += msg.value;
 	  
-	  if (!transferRLC(beneficiary, rlcToSend)) throw;     
+	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // DO the transfer right now or wait for the end of the crowdsale 
 	  
 	  receivedETH += msg.value;    // Update the total wei collcted during the crowdfunding     
 	  RLCSentToETH += rlcToSend;
-	  minCapReached = (RLCSentToETH + RLCSentToBTC) > minCap;
+	  variable(rlcToSend);
+	  minCapReached = (RLCSentToETH + RLCSentToBTC + RLCVariable) > minCap;
 
 	  ETHReceived(beneficiary);
-	  
+	}
+
+	// Compute the variable part
+	function variable(uint amount) internal {
+		rlc_bounty+=amount/10;      // bounty is 10% of the crowdsale
+		rlc_team+=amount/20;        // team is 5% of the crowdsale
+		rlc_contingency+=amount/10; // contingency is 10% of the crowdsale
+		RLCVariable+=amount/4;
 	}
 
 	// When the minimum cap is reached, ETH are moved to a specific address
@@ -118,11 +142,13 @@ contract Crowdsale {
 	/*
 	  Compute the RLC bonus
 	*/
+	
 	function bonus(uint amount) returns (uint) {
 	  if (now < (startBlock + 10 days)) return (amount + amount/5);
 	  if (now < startBlock + 20 days) return (amount + amount/10);
 	  return amount;
 	}
+	
 	/*
 	  Transfer RLC to backers
 	  Assumes that the owner of the token contract and the crowdsale contract is the same
@@ -131,4 +157,3 @@ contract Crowdsale {
 	  return rlc.transfer(to, amount);
 	}
 }
-
