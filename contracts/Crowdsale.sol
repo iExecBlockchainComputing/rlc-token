@@ -33,8 +33,8 @@ contract Crowdsale {
 	address public multisigETH; // Multisig contract that will receive the ETH
 	uint public RLCPerETH;      // Number of RLC per ETH
 	uint public RLCPerBTC;      // Number of RLC per BTC
-	uint public receivedETH;    // Number of ETH received
-	uint public receivedBTC;    // Number of BTC received
+	uint public ETHReceived;    // Number of ETH received
+	uint public BTCReceived;    // Number of BTC received
 	uint public RLCSentToETH;   // Number of RLC sent to ETH contributors
 	uint public RLCSentToBTC;   // Number of RLC sent to BTC contributors
 	uint public RLCVariable;	// Number of RLC emitted 
@@ -42,7 +42,6 @@ contract Crowdsale {
 	uint public endBlock;       // Crowdsale end block
 	uint public minCap;         // Minimum number of RLC to distribute
 	uint public maxCap;         // Maximum number of RLC to distribute
-	bool public minCapReached;  // Min cap has been reached
 	bool public maxCapReached;  // Max cap has been reached
 	uint public minInvestETH;   // Minimum amount to invest
 	uint public minInvestBTC;   // Minimum amount to invest
@@ -64,8 +63,8 @@ contract Crowdsale {
 	    _;
 	}
 
-	event ETHReceived(address);
-	event BTCReceived(string,address);
+	event receivedETH(address, uint);
+	event receivedBTC(string,address,uint);
 
 	// Constructor of the contract.
 	function Crowdsale(address _token) {
@@ -111,12 +110,44 @@ contract Crowdsale {
 	  
 	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // DO the transfer right now or wait for the end of the crowdsale 
 	  
-	  receivedETH += msg.value;    // Update the total wei collcted during the crowdfunding     
+	  ETHReceivedreceived += msg.value;    // Update the total wei collcted during the crowdfunding     
 	  RLCSentToETH += rlcToSend;
+	  
 	  variable(rlcToSend);
-	  minCapReached = (RLCSentToETH + RLCSentToBTC + RLCVariable) > minCap;
+	  
+	  // send the corresponding contribution event
+	  receivedETH(beneficiary,ETHReceived);
+	}
+	
+	
+	function receiveBTC(address beneficiary, string btc_address, uint value) onlyBy(owner){
 
-	  ETHReceived(beneficiary);
+	  // if we are in the correct time slot
+	  if ((now < startBlock) || (now > endBlock )) throw;  
+
+	  //compute the number of RLC to send
+	  uint rlcToSend = bonus((value*RLCPerBTC));
+	  
+	  //update the backer
+	  BackerBTC backer = backersBTC[beneficiary];
+	  backer.btc_address = btc_address;
+	  backer.satoshiReceived += value;
+	  
+	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // DO the transfer right now or wait for the end of the crowdsale 
+	  
+	  receivedBTC += value;    // Update the total wei collcted during the crowdfunding     
+	  RLCSentToBTC += rlcToSend;
+	  variable(rlcToSend);
+	  
+	  receivedBTC(beneficiary, btc_address, BTCReceived);
+	}
+	
+	function isMinCapReached() { 
+		return (RLCSentToETH + RLCSentToBTC + RLCVariable) > minCap;
+	}
+
+	function isMinCapReached() { 
+		return (RLCSentToETH + RLCSentToBTC + RLCVariable) = maxCap;
 	}
 
 	// Compute the variable part
@@ -142,7 +173,6 @@ contract Crowdsale {
 	/*
 	  Compute the RLC bonus
 	*/
-	
 	function bonus(uint amount) returns (uint) {
 	  if (now < (startBlock + 10 days)) return (amount + amount/5);
 	  if (now < startBlock + 20 days) return (amount + amount/10);
