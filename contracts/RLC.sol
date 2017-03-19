@@ -20,7 +20,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   mapping (address => mapping (address => uint)) allowed;
 
   function RLC() {
-    initialSupply = 100000000000000000;
+    initialSupply = 87000000000000000;
     totalSupply = initialSupply;
     balances[msg.sender] = initialSupply;// Give the creator all initial tokens                    
     name = 'iEx.ec Network Token';        // Set the name for display purposes     
