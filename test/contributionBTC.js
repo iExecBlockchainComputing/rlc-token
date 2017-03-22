@@ -31,7 +31,7 @@ contract('Crowdsale', function(accounts) {
       return Crowdsale.deployed(RLCcontract,{from: account_one});
       }).then(function(instance){
         CrowdContract = instance;
-        return RLCcontract.transfer(CrowdContract.address, 100000000000000000);
+        return RLCcontract.transfer(CrowdContract.address, 87000000000000000);
       }).then(function(instance){
         var myEvent = CrowdContract.allEvents();
         myEvent.watch(function(err, result){

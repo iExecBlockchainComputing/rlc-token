@@ -11,6 +11,17 @@ import "./RLC.sol";
 
  */
 
+// TODO 
+// Comment vont faire les gars qui ont investit en BTC avant le min cap pour recuperer leur rlc?
+// add lockable to RLC transfer only for owner
+// add emergency stop
+
+// TEST:
+// test differente timeframe
+// test multiple invest
+// test claim ETH
+
+
 contract Crowdsale {
 
 	// temp logs
@@ -34,6 +45,7 @@ contract Crowdsale {
 
 	uint public RLCPerETH;      // Number of RLC per ETH
 	uint public RLCPerBTC;      // Number of RLC per BTC
+	uint public RLCPerSATOSHI;  // Number of RLC per SATOSHI
 	uint public ETHReceived;    // Number of ETH received
 	uint public BTCReceived;    // Number of BTC received
 	uint public RLCSentToETH;   // Number of RLC sent to ETH contributors
@@ -65,24 +77,26 @@ contract Crowdsale {
 	    _;
 	}
 
-	event receivedETH(address, uint);
-	event receivedBTC(address, string,uint);
-
+	event receivedETH(address addr, uint value);
+	event receivedBTC(address addr, string from, uint value);
+	event RefundBTC(string to, uint value);
 	// Constructor of the contract.
 	function Crowdsale(address _token) {
 		
 	  //set the different variables
 	  owner = msg.sender;
+	  BTCproxy = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550; // to change
 	  //RLC = Token(0x0a8f269d52fad5f0f6297a264f48cbb290c68130); 	// RLC contract address
 	  rlc = RLC(_token); 	// RLC contract address
 	  multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
 	  RLCSentToETH = 0;
-	  minInvestETH = 100 finney; // approx 1 USD
-	  minInvestBTC = 100000;     // approx 1 USD
+	  minInvestETH = 100 finney; // 0.1 ether
+	  minInvestBTC = 100000;     // approx 1 USD or 0.00100000 BTC
 	  startBlock = now ;            // now (testnet)
 	  endBlock =  now + 30 days;    // ever (testnet) startdate + 30 days
-	  RLCPerBTC = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
-	  RLCPerETH = 5000;          // FIXME
+	  //RLCPerBTC = 50000000000000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
+	  RLCPerETH = 5000000000000;          // FIXME
+	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  minCap=12000000000000000;
 	  maxCap=60000000000000000;
 	  rlc_bounty=1700000000000000;		
@@ -97,11 +111,13 @@ contract Crowdsale {
 	function() payable	{
 	  receiveETH(msg.sender);
 	}
-	
+
 	/*
 	*	Receives a payment in ETH
 	*/
 	function receiveETH(address beneficiary) payable {
+// TODO check for msg.value coherent ?
+
 	  //don't accept funding under a predefined treshold
 	  if (msg.value < minInvestETH) throw;  
 
@@ -110,22 +126,23 @@ contract Crowdsale {
 
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((msg.value*RLCPerETH)/(1 ether));
+	  //uint rlcToSend = bonus((msg.value*RLCPerFINNEY)/(1 finney));
 
 	  // check if we are not reaching the maxCap by accepting this payment
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
 	  
 	  // check that the same ETH address has not be used for BTC payment to facilitate refund
-	//TODO Doesn't compile
-//	  if (backersBTC[beneficiary].btc_address != string(0x0)) throw;
+	 if (backersBTC[beneficiary].satoshiReceived > 0) throw;
 	  
 	  //update the backer
 	  BackerETH backer = backersETH[beneficiary];
-	  
+
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
-	  if(isMinCapReached()) {
-		  if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
-		  backer.rlcToSend=0;
+	  if(!isMinCapReached()) {
+	  	Logs(msg.sender,rlcToSend + backer.rlcToSend, "1st list");
+		if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
+			backer.rlcToSend=0;
 	  } else {
 	      //if not we provision them to be paid or reclaimed later
 		  backer.rlcToSend += rlcToSend;
@@ -145,12 +162,18 @@ contract Crowdsale {
 	* receives a payment in BTC
 	*/
 	
+
+	// add refund BTC event here
+
 	function receiveBTC(address beneficiary, string btc_address, uint value) onlyBy(BTCproxy){
 	  //don't accept funding under a predefined treshold
 	  if (value < minInvestBTC) throw;  
 
 	  // if we are in the correct time slot
 	  if ((now < startBlock) || (now > endBlock )) throw;  
+
+	  // check that the same ETH address has not be used for ETH payment to facilitate refund
+	  if (backersETH[beneficiary].weiReceived > 0) throw;
 
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((value*RLCPerBTC));
@@ -191,6 +214,7 @@ contract Crowdsale {
 
 	// Compute the variable part
 	function emitRLC(uint amount) internal {
+		Logs(msg.sender ,amount, "emitRLC");
 		rlc_bounty+=amount/10;      // bounty is 10% of the crowdsale
 		rlc_team+=amount/20;        // team is 5% of the crowdsale
 		rlc_reserve+=amount/10; 	// contingency is 10% of the crowdsale
@@ -201,8 +225,8 @@ contract Crowdsale {
 	  Compute the RLC bonus according to the investment period
 	*/
 	function bonus(uint amount) returns (uint) {
-	  if (now < (startBlock + 10 days)) return (amount + amount/5);
-	  if (now < startBlock + 20 days) return (amount + amount/10);
+	  if (now < (startBlock + 10 days)) return (amount + amount/5);  // bonus 20%
+	  if (now < startBlock + 20 days) return (amount + amount/10);  // bonus 10%
 	  return amount;
 	}
 	
@@ -222,14 +246,14 @@ contract Crowdsale {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint amount=backersETH[msg.sender].rlcToSend;
 		if (amount !=0 ) {
-			if (rlc.transfer(msg.sender,amount)) throw;
+			if (!rlc.transfer(msg.sender,amount)) throw;
 			backersETH[msg.sender].rlcToSend=0;
 			//transfer the corresponding amount to the multisig address
 			if (!multisigETH.send(backersETH[msg.sender].weiReceived)) throw;
 			backersETH[msg.sender].weiReceived=0;
 		} else {
 			amount = backersBTC[msg.sender].rlcToSend;
-			if (rlc.transfer(msg.sender,amount)) throw;
+			if (!rlc.transfer(msg.sender,amount)) throw;
 			backersBTC[msg.sender].rlcToSend=0;
 			backersBTC[msg.sender].satoshiReceived=0;
 		}
@@ -241,29 +265,49 @@ contract Crowdsale {
 	*/
 	function claimETH() {
 		//check if we are in the correct time frame and if the 
+/*
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		if (!msg.sender.send(backersETH[msg.sender].weiReceived)) throw;
 		backersETH[msg.sender].weiReceived=0;
 		//reverse sold RLC to the team
 		backersETH[msg.sender].rlcToSend=0;
+		*/
+
+		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
+		uint valToSend = backersETH[msg.sender].weiReceived;
+		backersETH[msg.sender].weiReceived=0;
+		backersETH[msg.sender].rlcToSend=0;
+		if (!msg.sender.send(valToSend)) throw;
 	}
 
 	/* 
 	* After the end of the crowdsale let user reclaimetheir BTC if minCap has not been reached.
 	* It must be sent from the backer address
 	*/
-
+	/*
 	function claimBTC(address beneficiary) onlyBy(BTCproxy) {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
+		uint valueToSend = backersBTC[msg.sender].satoshiReceived;
 		backersBTC[msg.sender].satoshiReceived=0;
 		//reverse sold RLC to the team
 		backersETH[msg.sender].rlcToSend=0;
+		RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend);
+
 	}
-	
+	*/
+	function claimBTC() {
+		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
+		uint valueToSend = backersBTC[msg.sender].satoshiReceived;
+		backersBTC[msg.sender].satoshiReceived=0;
+		//reverse sold RLC to the team
+		backersETH[msg.sender].rlcToSend=0;
+		RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend);
+	}
+
 	/*
 	* Update the rate RLC per ETH, computed externally by using the BTCETH index
 	*/
-	function setRLCPerETH(uint rate) onlyBy(owner) {
+	function setRLCPerETH(uint rate) onlyBy(BTCproxy) {
 		RLCPerETH=rate;
 	}
 	
@@ -281,6 +325,5 @@ contract Crowdsale {
 	    rlc.burn(rlc.totalSupply() - RLCEmitted);
 		crowdsaleClosed = true;
 	}
-	
-	
 }
+

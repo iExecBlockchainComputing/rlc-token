@@ -3,7 +3,7 @@ var Crowdsale = artifacts.require("./Crowdsale.sol");
 
 var rlc;
 var crowdsale;
-
+/*
 module.exports = function(deployer) {
     deployer.deploy(RLC).then(function() {
         return deployer.deploy(Crowdsale, RLC.address).then(function() {
@@ -13,4 +13,12 @@ module.exports = function(deployer) {
             return RLC.deployed();
         })
     });
+};
+
+*/
+
+module.exports = function(deployer) {
+  deployer.deploy(RLC).then(function(){
+  	return deployer.deploy(Crowdsale,RLC.address);
+  });
 };
