@@ -22,7 +22,7 @@ import "./RLC.sol";
 // test claim ETH
 
 
-contract Crowdsale {
+contract Crowdsale is SafeMath {
 
 	// temp logs
 	event Logs(address indexed from, uint amount, string value);
@@ -139,18 +139,22 @@ contract Crowdsale {
 
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
-	  if(!isMinCapReached()) {
+	  if(isMinCapReached()) {
 	  	Logs(msg.sender,rlcToSend + backer.rlcToSend, "1st list");
 		if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
 			backer.rlcToSend=0;
 	  } else {
 	      //if not we provision them to be paid or reclaimed later
-		  backer.rlcToSend += rlcToSend;
+		  //backer.rlcToSend += rlcToSend;
+		  backer.rlcToSend = safeAdd(backer.rlcToSend, rlcToSend);
 	  }
 	  
-	  backer.weiReceived += msg.value;
-	  ETHReceived += msg.value;    // Update the total wei collcted during the crowdfunding     
-	  RLCSentToETH += rlcToSend;   // Update the total wei collcted during the crowdfunding 
+	  //backer.weiReceived += msg.value;
+	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value);
+	  //ETHReceived += msg.value;    // Update the total wei collcted during the crowdfunding    
+	  ETHReceived = safeAdd(ETHReceived, msg.value) ;
+	  //RLCSentToETH += rlcToSend;   // Update the total wei collcted during the crowdfunding
+	  RLCSentToETH = safeAdd(RLCSentToETH, rlcToSend);
 
 	  emitRLC(rlcToSend);
 	  
@@ -163,7 +167,7 @@ contract Crowdsale {
 	*/
 	
 
-	// add refund BTC event here
+	// Refund BTC in JS if function throw
 
 	function receiveBTC(address beneficiary, string btc_address, uint value) onlyBy(BTCproxy){
 	  //don't accept funding under a predefined treshold
@@ -195,10 +199,13 @@ contract Crowdsale {
 	  }
 
 	  backer.btc_address = btc_address;
-	  backer.satoshiReceived += value;
+	  //backer.satoshiReceived += value;
+	  backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
 
-	  BTCReceived += value;    // Update the total satoshi collcted during the crowdfunding     
-	  RLCSentToBTC += rlcToSend;
+	  //BTCReceived += value;    // Update the total satoshi collcted during the crowdfunding   
+	  BTCReceived =  safeAdd(BTCReceived, value);
+	  //RLCSentToBTC += rlcToSend;
+	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
 	  
 	  receivedBTC(beneficiary, btc_address, BTCReceived);
