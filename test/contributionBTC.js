@@ -41,6 +41,11 @@ contract('Crowdsale', function(accounts) {
           }
           console.log("crowdsale event = ",result.args.amount,result.args.value);
         });
+
+
+
+        // call receiveBTC with right parameters
+
         return web3.eth.sendTransaction({from:account_two, to: CrowdContract.address , value: web3.toWei(1, "ether"), gas:4700000});
       }).then(function(result){
         console.log(result);

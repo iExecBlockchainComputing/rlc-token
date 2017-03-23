@@ -140,24 +140,18 @@ contract Crowdsale is SafeMath {
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
 	  if(isMinCapReached()) {
-	  	Logs(msg.sender,rlcToSend + backer.rlcToSend, "1st list");
 		if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
 			backer.rlcToSend=0;
 	  } else {
 	      //if not we provision them to be paid or reclaimed later
-		  //backer.rlcToSend += rlcToSend;
 		  backer.rlcToSend = safeAdd(backer.rlcToSend, rlcToSend);
 	  }
 	  
-	  //backer.weiReceived += msg.value;
-	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value);
-	  //ETHReceived += msg.value;    // Update the total wei collcted during the crowdfunding    
-	  ETHReceived = safeAdd(ETHReceived, msg.value) ;
-	  //RLCSentToETH += rlcToSend;   // Update the total wei collcted during the crowdfunding
+	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collcted during the crowdfunding     
+	  ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collcted during the crowdfunding
 	  RLCSentToETH = safeAdd(RLCSentToETH, rlcToSend);
 
 	  emitRLC(rlcToSend);
-	  
 	  // send the corresponding contribution event
 	  receivedETH(beneficiary,ETHReceived);
 	}
@@ -199,12 +193,9 @@ contract Crowdsale is SafeMath {
 	  }
 
 	  backer.btc_address = btc_address;
-	  //backer.satoshiReceived += value;
 	  backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
 
-	  //BTCReceived += value;    // Update the total satoshi collcted during the crowdfunding   
-	  BTCReceived =  safeAdd(BTCReceived, value);
-	  //RLCSentToBTC += rlcToSend;
+	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collcted during the crowdfunding 
 	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
 	  

@@ -15,11 +15,23 @@ contract RLC is ERC20, SafeMath, Ownable {
   uint256 public initialSupply;
   address public burnAddress;
   uint256 public totalSupply;
+  bool public locked;
+  uint public endLock;
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
+  // lock transfer during the ICO
+  modifier onlyUnlocked() {
+    if (msg.sender != owner && locked) throw;
+    _;
+  }
+
   function RLC() {
+    // for lock the transfer function during the crowdsale
+    locked = true;
+    endLock =  now + 45 days;
+
     initialSupply = 87000000000000000;
     totalSupply = initialSupply;
     balances[msg.sender] = initialSupply;// Give the creator all initial tokens                    
@@ -27,6 +39,12 @@ contract RLC is ERC20, SafeMath, Ownable {
     symbol = 'RLC';                       // Set the symbol for display purposes  
     decimals = 9;                        // Amount of decimals for display purposes
     burnAddress = 0x1b32000000000000000000000000000000000000;
+  }
+
+  function unlock() {
+    if (now < endLock) throw;
+    if (!locked) throw;   // to allow only 1 call
+    locked = false;
   }
 
   function burn(uint256 _value) returns (bool success){
@@ -37,7 +55,7 @@ contract RLC is ERC20, SafeMath, Ownable {
     return true;
   }
 
-  function transfer(address _to, uint _value) returns (bool success) {
+  function transfer(address _to, uint _value) onlyUnlocked returns (bool success) {
     Transfer(msg.sender, _to, _value);
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
@@ -45,7 +63,7 @@ contract RLC is ERC20, SafeMath, Ownable {
     return true;
   }
 
-  function transferFrom(address _from, address _to, uint _value) returns (bool success) {
+  function transferFrom(address _from, address _to, uint _value) onlyUnlocked returns (bool success) {
     var _allowance = allowed[_from][msg.sender];
     
     balances[_to] = safeAdd(balances[_to], _value);

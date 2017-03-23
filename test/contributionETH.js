@@ -5,10 +5,6 @@ var Web3 = require('web3');
 web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 
 
-
-
-
-
 contract('Crowdsale', function(accounts) {
   it("Send Eth to the contract and verify RLC balance", function() {
     var account_one = accounts[0];
@@ -32,22 +28,20 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.transfer(CrowdContract.address, 87000000000000000,{from: account_one});
 
       }).then(function(res){
+        return RLCcontract.owner.call();
+      }).then(function(res){
+        console.log("owner",res);
 
+        return RLCcontract.transferOwnership(CrowdContract.address,{from: account_one});
+
+      }).then(function(res){
+        return RLCcontract.owner.call();
+      }).then(function(res){
+        console.log("owner",res);
         return RLCcontract.balanceOf.call(CrowdContract.address);
       }).then(function(result){
         console.log(result)
         assert.equal(result.toNumber(),87000000000000000,"test crowdsale get all RLC ");
-/*
-      var myEvent2 = RLCcontract.Transfer();
-      myEvent2.watch(function(err, result){
-        if (err) {
-                console.log("Erreur event ", err);
-                return;
-        }
-        console.log("Token2 event = ",result.args.to,result.args.value);
-              //console.log("Event = ", JSON.parse(result.args.value));
-      });
-*/
         var myEvent = CrowdContract.Logs();
         myEvent.watch(function(err, result){
           if (err) {
@@ -57,10 +51,10 @@ contract('Crowdsale', function(accounts) {
           console.log("crowdsale event = ",result.args.amount,result.args.value);
         });
         
-        return web3.eth.sendTransaction({from:account_two, to: CrowdContract.address , value: web3.toWei(0.1, "ether"), gas:4000000});
+        return web3.eth.sendTransaction({from:account_two, to: CrowdContract.address , value: web3.toWei(1, "ether"), gas:4000000});
       }).then(function(result){
         console.log(result);
-/*
+
 
         return RLCcontract.balanceOf.call(account_two);
       }).then(function(result){
@@ -69,7 +63,6 @@ contract('Crowdsale', function(accounts) {
         return CrowdContract.rlc_bounty();
       }).then(function(result){
         assert.equal(result.toNumber(),1700600000000000,"rlc bounty part")    
-        */
       }).catch(function(err){
         console.log(err);
     });
