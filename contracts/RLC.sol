@@ -32,9 +32,9 @@ contract RLC is ERC20, SafeMath, Ownable {
    */
 
   function RLC(uint _unlock) {
-    // for lock the transfer function during the crowdsale
+    // lock the transfer function during the crowdsale
     locked = true;
-    unlockBlock =  _unlock;
+    unlockBlock=  _unlock;
 
     initialSupply = 87000000000000000;
     totalSupply = initialSupply;
@@ -46,7 +46,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
 
   function unlock() {
-    if (now < endLock) throw;
+    if (now < unlockBlock) throw;
     if (!locked) throw;   // to allow only 1 call
     locked = false;
   }
