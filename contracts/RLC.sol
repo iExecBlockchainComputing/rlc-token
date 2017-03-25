@@ -16,7 +16,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   address public burnAddress;
   uint256 public totalSupply;
   bool public locked;
-  uint public endLock;
+  uint public unlockBlock;
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
@@ -27,10 +27,14 @@ contract RLC is ERC20, SafeMath, Ownable {
     _;
   }
 
-  function RLC() {
+  /*
+   *  The RLC Token created with the time at which the crowdsale end
+   */
+
+  function RLC(uint _unlock) {
     // for lock the transfer function during the crowdsale
     locked = true;
-    endLock =  now + 45 days;
+    unlockBlock =  _unlock;
 
     initialSupply = 87000000000000000;
     totalSupply = initialSupply;
@@ -94,6 +98,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   function allowance(address _owner, address _spender) constant returns (uint remaining) {
     return allowed[_owner][_spender];
   }
+  
     /* This unnamed function is called whenever someone tries to send ether to it */
     function () {
         throw;     // Prevents accidental sending of ether
