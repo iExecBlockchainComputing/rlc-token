@@ -24,18 +24,12 @@ import "./RLC.sol";
 
 contract Crowdsale is SafeMath {
 
-	// temp logs
-
-
-  	struct BackerETH {
-	  uint weiReceived;	// Amount of ETH given
-	  uint rlcToSend;  	// rlc to distribute when the min cap is reached
-	}
-
-  	struct BackerBTC {
+  	struct Backer {
+  	  uint weiReceived;	// Amount of ETH given
 	  string btc_address;  //store the btc address for full tracability
 	  uint satoshiReceived;	// Amount of BTC given
 	  uint rlcToSend;   	// rlc to distribute when the min cap is reached
+	  uint rlcSent;
 	}
 
 	RLC 	public rlc;         // RLC contract reference
@@ -44,7 +38,6 @@ contract Crowdsale is SafeMath {
 	address public BTCproxy;	// addess of the BTC Proxy
 
 	uint public RLCPerETH;      // Number of RLC per ETH
-	//uint public RLCPerBTC;      // Number of RLC per BTC
 	uint public RLCPerSATOSHI;  // Number of RLC per SATOSHI
 	uint public ETHReceived;    // Number of ETH received
 	uint public BTCReceived;    // Number of BTC received
@@ -68,14 +61,20 @@ contract Crowdsale is SafeMath {
 	uint public rlc_reserve;	// amount of the contingency reserve
 	uint public rlc_team;		// amount of the team RLC 
 	
-	mapping(address => BackerETH) public backersETH; //backersETH indexed by their ETH address
-	mapping(address => BackerBTC) public backersBTC; //backersBTC indexed by their (BTC,ETH) address
+	mapping(address => Backer) public backers; //backersETH indexed by their ETH address
+	//mapping(address => BackerBTC) public backersBTC; //backersBTC indexed by their (BTC,ETH) address
 
     // Auth modifier, if the msg.sender isn't the expected address, throw.
 	modifier onlyBy(address a){
 	    if (msg.sender != a) throw;  
 	    _;
 	}
+
+	modifier minCapNotReached() {
+		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
+		_;
+	}
+
 
 	event ReceivedETH(address addr, uint value);
 	event ReceivedBTC(address addr, string from, uint value);
@@ -131,25 +130,13 @@ contract Crowdsale is SafeMath {
 
 	  // check if we are not reaching the maxCap by accepting this payment
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
-	  
-	  // check that the same ETH address has not be used for BTC payment to facilitate refund
-	 //if (backersBTC[beneficiary].satoshiReceived > 0) throw;
-	  
-	  //update the backer
-	  BackerETH backer = backersETH[beneficiary];
 
-	  // if the min cap is reached, token transfer happens immediately possibly along
-	  // with the previous payment
-	  if(isMinCapReached()) {
-	  		  		  Logs(msg.sender,rlcToSend, "first if ETH");
-		if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
-			backer.rlcToSend=0;
-	  } else {
-	  		  		  Logs(msg.sender,rlcToSend, "second if ETH");
-	      //if not we provision them to be paid or reclaimed later
-		  backer.rlcToSend = safeAdd(backer.rlcToSend, rlcToSend);
-	  }
-	  
+	  //update the backer
+	  Backer backer = backers[beneficiary];
+
+	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
+
+	  backer.rlcSent = safeAdd(backer.rlcSent, rlcToSend);
 	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collcted during the crowdfunding     
 	  ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collcted during the crowdfunding
 	  RLCSentToETH = safeAdd(RLCSentToETH, rlcToSend);
@@ -172,9 +159,6 @@ contract Crowdsale is SafeMath {
 	  // if we are in the correct time slot
 	  if ((now < startBlock) || (now > endBlock )) throw;  
 
-	  // check that the same ETH address has not be used for ETH payment to facilitate refund
-	  if (backersETH[beneficiary].weiReceived > 0) throw;
-
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((value*RLCPerSATOSHI));
 
@@ -182,20 +166,13 @@ contract Crowdsale is SafeMath {
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
 
 	  //update the backer
-	  BackerBTC backer = backersBTC[beneficiary];
+	  Backer backer = backers[beneficiary];
 
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
-	  if(isMinCapReached()) {
-	  		  Logs(msg.sender,rlcToSend, "first if BTC");
-		  if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
-		  	backer.rlcToSend=0;
-	  } else {
-	  		  Logs(msg.sender,rlcToSend, "second if BTC");
-	      //if not we provision them to be paid or reclaimed later
-		  backer.rlcToSend += rlcToSend;
-	  }
+	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
 
+	  backer.rlcSent = safeAdd(backer.rlcSent , rlcToSend);
 	  backer.btc_address = btc_address;
 	  backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
 	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collcted during the crowdfunding 
@@ -239,10 +216,29 @@ contract Crowdsale is SafeMath {
 	  return rlc.transfer(to, amount);
 	}
 
+
+/*
+	function getRefund() minCapNotReached {
+
+	}
+
+    function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) {
+        if (msg.sender != _iextokenAddr) throw;
+        if (bytes(_extraData).length == 0) throw;
+        if (bytes(_extraData2).length > 5) throw;  // max vanity lenght
+        if (_value != 1000000000) throw; // vanity cost
+        if (!iextoken.transferFrom(_from, owner, _value)) throw ;
+        Launch(_extraData, _extraData2, _from);
+        launched = true;
+    }
+
+
+
+
 	/* 
 	* After the end of the crowdsale let user reclaimed their RLC if minCap has not been reached.
 	* It must be sent from the backer address
-	*/
+
 	function claimRLC() {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint amount=backersETH[msg.sender].rlcToSend;
@@ -260,11 +256,12 @@ contract Crowdsale is SafeMath {
 			if (!rlc.transfer(msg.sender,amount)) throw;
 		}
 	}
+	*/
 
 	/* 
 	* After the end of the crowdsale let user reclaimed their ETH if minCap has not been reached.
 	* It must be sent from the backer address
-	*/
+
 	function claimETH() {
 		//check if we are in the correct time frame 
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
@@ -273,11 +270,11 @@ contract Crowdsale is SafeMath {
 		backersETH[msg.sender].rlcToSend=0;
 		if (!msg.sender.send(valToSend)) throw;
 	}
-
+	*/
 	/* 
 	* After the end of the crowdsale let user reclaimetheir BTC if minCap has not been reached.
 	* It must be sent from the backer address
-	*/
+
 	function claimBTC() {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint valueToSend = backersBTC[msg.sender].satoshiReceived;
@@ -286,7 +283,7 @@ contract Crowdsale is SafeMath {
 		backersETH[msg.sender].rlcToSend=0;
 		RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend);
 	}
-
+	*/
 	/*
 	* Update the rate RLC per ETH, computed externally by using the BTCETH index
 	*/
