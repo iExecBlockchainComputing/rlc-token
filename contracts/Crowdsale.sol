@@ -222,16 +222,16 @@ contract Crowdsale is SafeMath {
 	 */
 
     function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached {
-        if (msg.sender != rlc) throw;
-        if (bytes(_extraData).length != 0) throw;
-        if (bytes(_extraData2).length!= 0) throw;
+        if (msg.sender != rlc) throw; 
+        if (bytes(_extraData).length != 0) throw;  // no extradata needed
+        if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
         if (_value != backer[_from].rlcSent) throw; // compare value from backer balance
         if (!rlc.transferFrom(_from, this, _value)) throw ; // get the token back to the crowdsale contract
 		uint ETHToSend = backers[_from].weiReceived;
 		backers[_from].weiReceived=0;
 		uint BTCToSend = backers[_from].satoshiReceived;
 		backers[_from].satoshiReceived = 0;
-		if (!msg.sender.send(ETHToSend)) throw;
+		if (!_from.send(ETHToSend)) throw;
 		if (BTCToSend > 0)
 			RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend); // event message to manually refund BTC
     }
