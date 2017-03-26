@@ -133,7 +133,7 @@ contract Crowdsale is SafeMath {
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
 	  
 	  // check that the same ETH address has not be used for BTC payment to facilitate refund
-	 if (backersBTC[beneficiary].satoshiReceived > 0) throw;
+	 //if (backersBTC[beneficiary].satoshiReceived > 0) throw;
 	  
 	  //update the backer
 	  BackerETH backer = backersETH[beneficiary];
@@ -141,9 +141,11 @@ contract Crowdsale is SafeMath {
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
 	  if(isMinCapReached()) {
+	  		  		  Logs(msg.sender,rlcToSend, "first if ETH");
 		if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
 			backer.rlcToSend=0;
 	  } else {
+	  		  		  Logs(msg.sender,rlcToSend, "second if ETH");
 	      //if not we provision them to be paid or reclaimed later
 		  backer.rlcToSend = safeAdd(backer.rlcToSend, rlcToSend);
 	  }
@@ -178,15 +180,18 @@ contract Crowdsale is SafeMath {
 
 	  // check if we are not reaching the maxCap
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
+
 	  //update the backer
 	  BackerBTC backer = backersBTC[beneficiary];
 
 	  // if the min cap is reached, token transfer happens immediately possibly along
 	  // with the previous payment
 	  if(isMinCapReached()) {
+	  		  Logs(msg.sender,rlcToSend, "first if BTC");
 		  if (!transferRLC(beneficiary, rlcToSend + backer.rlcToSend)) throw;     // Do the transfer right now 
 		  	backer.rlcToSend=0;
 	  } else {
+	  		  Logs(msg.sender,rlcToSend, "second if BTC");
 	      //if not we provision them to be paid or reclaimed later
 		  backer.rlcToSend += rlcToSend;
 	  }
@@ -242,16 +247,17 @@ contract Crowdsale is SafeMath {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint amount=backersETH[msg.sender].rlcToSend;
 		if (amount !=0 ) {
-			if (!rlc.transfer(msg.sender,amount)) throw;
 			backersETH[msg.sender].rlcToSend=0;
+			if (!rlc.transfer(msg.sender,amount)) throw;
 			//transfer the corresponding amount to the multisig address
-			if (!multisigETH.send(backersETH[msg.sender].weiReceived)) throw;
+			uint weitosend = backersETH[msg.sender].weiReceived;
 			backersETH[msg.sender].weiReceived=0;
+			if (!multisigETH.send(backersETH[msg.sender].weiReceived)) throw;
 		} else {
 			amount = backersBTC[msg.sender].rlcToSend;
-			if (!rlc.transfer(msg.sender,amount)) throw;
 			backersBTC[msg.sender].rlcToSend=0;
 			backersBTC[msg.sender].satoshiReceived=0;
+			if (!rlc.transfer(msg.sender,amount)) throw;
 		}
 	}
 
@@ -261,7 +267,6 @@ contract Crowdsale is SafeMath {
 	*/
 	function claimETH() {
 		//check if we are in the correct time frame 
-
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint valToSend = backersETH[msg.sender].weiReceived;
 		backersETH[msg.sender].weiReceived=0;

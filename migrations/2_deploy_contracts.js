@@ -19,6 +19,6 @@ module.exports = function(deployer) {
 
 module.exports = function(deployer) {
   deployer.deploy(RLC).then(function(){
-  	return deployer.deploy(Crowdsale,RLC.address,web3.eth.accounts[2]);
+  	return deployer.deploy(Crowdsale,RLC.address,web3.eth.accounts[1]);
   });
 };
