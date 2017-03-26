@@ -216,24 +216,25 @@ contract Crowdsale is SafeMath {
 	  return rlc.transfer(to, amount);
 	}
 
+	/*
+	 * When mincap is not reach backer can call the approveAndCall function of the RLC token contract
+	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
+	 */
 
-/*
-	function getRefund() minCapNotReached {
-
-	}
-
-    function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) {
-        if (msg.sender != _iextokenAddr) throw;
-        if (bytes(_extraData).length == 0) throw;
-        if (bytes(_extraData2).length > 5) throw;  // max vanity lenght
-        if (_value != 1000000000) throw; // vanity cost
-        if (!iextoken.transferFrom(_from, owner, _value)) throw ;
-        Launch(_extraData, _extraData2, _from);
-        launched = true;
+    function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached {
+        if (msg.sender != rlc) throw;
+        if (bytes(_extraData).length != 0) throw;
+        if (bytes(_extraData2).length!= 0) throw;
+        if (_value != backer[_from].rlcSent) throw; // compare value from backer balance
+        if (!rlc.transferFrom(_from, this, _value)) throw ; // get the token back to the crowdsale contract
+		uint ETHToSend = backers[_from].weiReceived;
+		backers[_from].weiReceived=0;
+		uint BTCToSend = backers[_from].satoshiReceived;
+		backers[_from].satoshiReceived = 0;
+		if (!msg.sender.send(ETHToSend)) throw;
+		if (BTCToSend > 0)
+			RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend); // event message to manually refund BTC
     }
-
-
-
 
 	/* 
 	* After the end of the crowdsale let user reclaimed their RLC if minCap has not been reached.
