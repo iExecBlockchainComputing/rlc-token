@@ -79,6 +79,7 @@ contract Crowdsale is SafeMath {
 	event ReceivedETH(address addr, uint value);
 	event ReceivedBTC(address addr, string from, uint value);
 	event RefundBTC(string to, uint value);
+	event RefundETH(address to, uint value);
 	event Logs(address indexed from, uint amount, string value);
 	// Constructor of the contract.
 	function Crowdsale(address _token, address _btcproxy) {
@@ -226,12 +227,18 @@ contract Crowdsale is SafeMath {
         if (bytes(_extraData).length != 0) throw;  // no extradata needed
         if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
         if (_value != backer[_from].rlcSent) throw; // compare value from backer balance
-        if (!rlc.transferFrom(_from, this, _value)) throw ; // get the token back to the crowdsale contract
+        if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
 		uint ETHToSend = backers[_from].weiReceived;
 		backers[_from].weiReceived=0;
 		uint BTCToSend = backers[_from].satoshiReceived;
 		backers[_from].satoshiReceived = 0;
-		if (!_from.send(ETHToSend)) throw;
+		if (ETHToSend > 0) {
+			if (_from.send(ETHToSend)) {
+					RefundETH(_from,ETHToSend);
+				} else {
+					backers[_from].weiReceived = ETHToSend;
+				}
+		}
 		if (BTCToSend > 0)
 			RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend); // event message to manually refund BTC
     }
