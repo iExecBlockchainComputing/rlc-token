@@ -278,7 +278,6 @@ contract Crowdsale is SafeMath {
 	* After the end of the crowdsale let user reclaimetheir BTC if minCap has not been reached.
 	* It must be sent from the backer address
 	*/
-
 	function claimBTC() {
 		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
 		uint valueToSend = backersBTC[msg.sender].satoshiReceived;
