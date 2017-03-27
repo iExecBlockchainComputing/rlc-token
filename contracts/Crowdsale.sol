@@ -1,6 +1,8 @@
 pragma solidity ^0.4.8;
 import "./SafeMath.sol";
 import "./RLC.sol";
+import "./PullPayment.sol";
+import "./Pausable.sol";
 
 /*
   Crowdsale Smart Contract for the iEx.ec project
@@ -11,18 +13,9 @@ import "./RLC.sol";
 
  */
 
-// TODO 
-// Comment vont faire les gars qui ont investit en BTC avant le min cap pour recuperer leur rlc?
-// add lockable to RLC transfer only for owner
-// add emergency stop
-
-// TEST:
-// test differente timeframe
-// test multiple invest
-// test claim ETH
 
 
-contract Crowdsale is SafeMath {
+contract Crowdsale is SafeMath, PullPayment, Pausable {
 
   	struct Backer {
   	  uint weiReceived;	// Amount of ETH given
@@ -79,7 +72,6 @@ contract Crowdsale is SafeMath {
 	event ReceivedETH(address addr, uint value);
 	event ReceivedBTC(address addr, string from, uint value);
 	event RefundBTC(string to, uint value);
-	event RefundETH(address to, uint value);
 	event Logs(address indexed from, uint amount, string value);
 	// Constructor of the contract.
 	function Crowdsale(address _token, address _btcproxy) {
@@ -116,7 +108,7 @@ contract Crowdsale is SafeMath {
 	/*
 	*	Receives a payment in ETH
 	*/
-	function receiveETH(address beneficiary) payable {
+	function receiveETH(address beneficiary) stopInEmergency payable {
 // TODO check for msg.value coherent ?
 
 	  //don't accept funding under a predefined treshold
@@ -153,7 +145,7 @@ contract Crowdsale is SafeMath {
 
 	// Refund BTC in JS if function throw
 
-	function receiveBTC(address beneficiary, string btc_address, uint value) onlyBy(BTCproxy){
+	function receiveBTC(address beneficiary, string btc_address, uint value) stopInEmergency onlyBy(BTCproxy){
 	  //don't accept funding under a predefined treshold
 	  if (value < minInvestBTC) throw;  
 
@@ -223,10 +215,10 @@ contract Crowdsale is SafeMath {
 	 */
 
     function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached {
-        if (msg.sender != rlc) throw; 
+        if (msg.sender != address(rlc)) throw; 
         if (bytes(_extraData).length != 0) throw;  // no extradata needed
         if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
-        if (_value != backer[_from].rlcSent) throw; // compare value from backer balance
+        if (_value != backers[_from].rlcSent) throw; // compare value from backer balance
         if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
 		uint ETHToSend = backers[_from].weiReceived;
 		backers[_from].weiReceived=0;
@@ -240,8 +232,30 @@ contract Crowdsale is SafeMath {
 				}
 		}
 		if (BTCToSend > 0)
-			RefundBTC(backersBTC[msg.sender].btc_address ,valueToSend); // event message to manually refund BTC
+			RefundBTC(backers[msg.sender].btc_address ,BTCToSend); // event message to manually refund BTC
     }
+
+
+    // to test version with asyncsend from
+
+    function receiveApproval2(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached {
+        if (msg.sender != address(rlc)) throw; 
+        if (bytes(_extraData).length != 0) throw;  // no extradata needed
+        if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
+        if (_value != backers[_from].rlcSent) throw; // compare value from backer balance
+        if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
+		uint ETHToSend = backers[_from].weiReceived;
+		backers[_from].weiReceived=0;
+		uint BTCToSend = backers[_from].satoshiReceived;
+		backers[_from].satoshiReceived = 0;
+		if (ETHToSend > 0) {
+			asyncSend(_from,ETHToSend);
+		}
+		if (BTCToSend > 0)
+			RefundBTC(backers[msg.sender].btc_address ,BTCToSend); // event message to manually refund BTC
+    }
+
+
 
 	/* 
 	* After the end of the crowdsale let user reclaimed their RLC if minCap has not been reached.
