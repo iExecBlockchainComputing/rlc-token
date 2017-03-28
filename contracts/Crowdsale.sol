@@ -241,10 +241,10 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
 	 */
 
-    function receiveApproval(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached public {
+    function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
         if (msg.sender != address(rlc)) throw; 
-        if (bytes(_extraData).length != 0) throw;  // no extradata needed
-        if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
+        if (_extraData.length != 0) throw;  // no extradata needed
+        if (_extraData2.length != 0) throw;  // no extradata needed
         if (_value != backers[_from].rlcSent) throw; // compare value from backer balance
         if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
 		uint ETHToSend = backers[_from].weiReceived;
@@ -258,7 +258,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 			RefundBTC(backers[_from].btc_address ,BTCToSend); // event message to manually refund BTC
     }
 /*
-    function receiveApprovalOLD(address _from, uint256 _value, address _token, string _extraData, string _extraData2) minCapNotReached public {
+    function receiveApprovalOLD(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
         if (msg.sender != address(rlc)) throw; 
         if (bytes(_extraData).length != 0) throw;  // no extradata needed
         if (bytes(_extraData2).length!= 0) throw;  // no extradata needed

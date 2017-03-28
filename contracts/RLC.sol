@@ -87,7 +87,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
 
     /* Approve and then comunicate the approved contract in a single tx */
-  function approveAndCall(address _spender, uint256 _value, string _extraData, string _extraData2){    
+  function approveAndCall(address _spender, uint256 _value, bytes _extraData, bytes _extraData2){    
       TokenSpender spender = TokenSpender(_spender);
       if (approve(_spender, _value)) {
           spender.receiveApproval(msg.sender, _value, this, _extraData, _extraData2);
