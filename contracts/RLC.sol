@@ -31,10 +31,10 @@ contract RLC is ERC20, SafeMath, Ownable {
    *  The RLC Token created with the time at which the crowdsale end
    */
 
-  function RLC(uint _unlock) {
+  function RLC() {
     // lock the transfer function during the crowdsale
     locked = true;
-    unlockBlock=  _unlock;
+    unlockBlock=  now + 45 days; // (testnet) - for mainnet put the block number
 
     initialSupply = 87000000000000000;
     totalSupply = initialSupply;
@@ -60,10 +60,9 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
 
   function transfer(address _to, uint _value) onlyUnlocked returns (bool success) {
-    Transfer(msg.sender, _to, _value);
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
-
+    Transfer(msg.sender, _to, _value);
     return true;
   }
 
@@ -88,7 +87,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
 
     /* Approve and then comunicate the approved contract in a single tx */
-  function approveAndCall(address _spender, uint256 _value, string _extraData, string _extraData2){    
+  function approveAndCall(address _spender, uint256 _value, bytes _extraData, bytes _extraData2){    
       TokenSpender spender = TokenSpender(_spender);
       if (approve(_spender, _value)) {
           spender.receiveApproval(msg.sender, _value, this, _extraData, _extraData2);
