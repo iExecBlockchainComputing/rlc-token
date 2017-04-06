@@ -79,7 +79,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(accounts[2]);
       }).then(function(result){
         acc2RLCbal = result.toNumber();
-        assert.equal(result.toNumber(),6000000000000,"RLC send acc2")  
+        assert.equal(result.toNumber(),240000000000,"RLC send acc2")  
 
 // get balance after payment acc2
         return web3.eth.getBalance(accounts[2]);
@@ -93,7 +93,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(accounts[3]);
       }).then(function(result){
         acc3RLCbal = result.toNumber();
-        assert.equal(result.toNumber(),6000000000000,"RLC send acc3")  
+        assert.equal(result.toNumber(),240000000000,"RLC send acc3")  
 
 // get balance after payment acc3
         return web3.eth.getBalance(accounts[3]);
@@ -108,7 +108,7 @@ contract('Crowdsale', function(accounts) {
           crowdContractBal = result.toNumber();
 
 // first payment in BTC with account 4
-        return CrowdContract.receiveBTC(accounts[4], "0x004", 200000, {from:accounts[1] ,gas:300000});
+        return CrowdContract.receiveBTC(accounts[4], "0x004", 200000, "tsxid", {from:accounts[1] ,gas:300000});
       }).then(function(result){
         return RLCcontract.balanceOf.call(accounts[4]);
       }).then(function(result){
@@ -167,7 +167,7 @@ contract('Crowdsale', function(accounts) {
         // check other value rlc_bounty rlc_team rlc_reserve RLCEmitted
         return CrowdContract.rlc_bounty();
       }).then(function(result){
-        assert.equal(result.toNumber(),1701201200000000,"rlc bounty part")  
+        assert.equal(result.toNumber(),1700049200000000,"rlc bounty part")  
       }).catch(function(err){
         console.log(err);
     });

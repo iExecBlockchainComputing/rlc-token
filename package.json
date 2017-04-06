@@ -1,0 +1,25 @@
+{
+  "name": "rlc-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iExecBlockchainComputing/rlc-token.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iExecBlockchainComputing/rlc-token/issues"
+  },
+  "homepage": "https://github.com/iExecBlockchainComputing/rlc-token#readme",
+  "dependencies": {
+    "ethereumjs-testrpc": "^3.0.3"
+  }
+}

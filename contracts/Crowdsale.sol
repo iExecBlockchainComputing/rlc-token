@@ -95,7 +95,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
 
 	event ReceivedETH(address addr, uint value);
-	event ReceivedBTC(address addr, string from, uint value);
+	event ReceivedBTC(address addr, string from, uint value, string txid);
 	event RefundBTC(string to, uint value);
 	event Logs(address indexed from, uint amount, string value);
 	// Constructor of the contract.
@@ -115,7 +115,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  minInvestBTC = 100000;     // approx 1 USD or 0.00100000 BTC
 	  startBlock = now ;            // now (testnet)
 	  endBlock =  now + 30 days;    // ever (testnet) startdate + 30 days
-	  RLCPerETH = 5000000000000;    // FIXME  will be update
+	  RLCPerETH = 200000000000;    // FIXME  will be update
 	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  minCap=12000000000000000;
 	  maxCap=60000000000000000;
@@ -172,7 +172,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
 	// Refund BTC in JS if function throw
 
-	function receiveBTC(address beneficiary, string btc_address, uint value) stopInEmergency onlyBy(BTCproxy){
+	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency onlyBy(BTCproxy){
 	  //don't accept funding under a predefined treshold
 	  if (value < minInvestBTC) throw;  
 
@@ -199,7 +199,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
 	  
-	  ReceivedBTC(beneficiary, btc_address, BTCReceived);
+	  ReceivedBTC(beneficiary, btc_address, BTCReceived, txid);
 	}
 	
 	function isMinCapReached() internal returns (bool) {
