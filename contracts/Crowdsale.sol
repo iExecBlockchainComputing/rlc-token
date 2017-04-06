@@ -198,7 +198,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collcted during the crowdfunding 
 	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
-	  
 	  ReceivedBTC(beneficiary, btc_address, BTCReceived, txid);
 	}
 	
@@ -292,7 +291,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	*/
 	function finalize() onlyBy(owner) {
 		//if ((now < endBlock + 15 days ) || (now > endBlock + 60 days)) throw;
-		if (now < endBlock + 15 days ) throw;
+		if (!isMaxCapReached() && now < endBlock + 15 days) throw;
 		//moves the remaining ETH to the multisig address
 		if (!multisigETH.send(this.balance)) throw;
 		//moves RLC to the team, reserve and bounty address
