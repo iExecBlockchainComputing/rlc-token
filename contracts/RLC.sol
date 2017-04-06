@@ -13,7 +13,6 @@ contract RLC is ERC20, SafeMath, Ownable {
   uint8 public decimals;    //How many decimals to show.
   string public version = 'v0.1'; 
   uint256 public initialSupply;
-  address public burnAddress;
   uint256 public totalSupply;
   bool public locked;
   uint public unlockBlock;
@@ -42,7 +41,6 @@ contract RLC is ERC20, SafeMath, Ownable {
     name = 'iEx.ec Network Token';        // Set the name for display purposes     
     symbol = 'RLC';                       // Set the symbol for display purposes  
     decimals = 9;                        // Amount of decimals for display purposes
-    burnAddress = 0x1b32000000000000000000000000000000000000;
   }
 
   function unlock() {
@@ -53,9 +51,8 @@ contract RLC is ERC20, SafeMath, Ownable {
 
   function burn(uint256 _value) returns (bool success){
     balances[msg.sender] = safeSub(balances[msg.sender], _value) ;
-    balances[burnAddress] = safeAdd(balances[burnAddress], _value);
     totalSupply = safeSub(totalSupply, _value);
-    Transfer(msg.sender, burnAddress, _value);
+    Transfer(msg.sender, 0x0, _value);
     return true;
   }
 
