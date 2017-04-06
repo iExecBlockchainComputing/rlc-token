@@ -8,7 +8,7 @@ var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 // reach the min cap and the get the token with a second payment
 //
 
-contract('Crowdsale', function(accounts, network) {
+contract('Crowdsale', function(accounts) {
   it("Send Eth and BTC to the contract and verify RLC balance", function() {
     var CrowdContract;
     var RLCcontract;
@@ -17,24 +17,16 @@ contract('Crowdsale', function(accounts, network) {
     var teamRLC = 0;
     var reserveRLC = 0;
     var bountyRLC = 0;
-console.log("net ", network);
-
-//    if (network == "ropsten") {
-
-        var owner = "0x7c34db57c20eab8f1fca9b76b93d44f65338dae7";
-        var btcproxy = "0x5081be2f9d34f70a4946d3c3972348fc952ae110";
-        var firstcust = "0xdb9e7c7eba7041a61d17017e32b826c636784353";
-        var seccust = "0xc3782c4bd2ac23a4e3bbaeb27eb323c4be218495";
-        var thirdcust = "0xb3be7a782dc6fa78b2e233bc1c41bb3d493aecb8";
-        var fourthcust = "0xc50cde425f7cb96839d8133f7af26c9b9ebcc488";
 
 
-/*      var owner = accounts[0];
+
+
+      var owner = accounts[0];
       var btcproxy = accounts[1];
       var firstcust = accounts[2];
       var seccust = accounts[3];
       var thirdcust = accounts[4];
-      var fourthcust = accounts[5];*/
+      var fourthcust = accounts[5];
 
 
 

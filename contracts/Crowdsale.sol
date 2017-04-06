@@ -17,7 +17,7 @@ import "./Pausable.sol";
 // To test: RLC allowance when reach Maxcap, Unlock transfer, pausable
 // Add unlock transfer in finalise 
 // test transfer before and after finalise
-
+// modify the finalise to be able to finalise just after the crowdsale if mincapisreached
 
 contract Crowdsale is SafeMath, PullPayment, Pausable {
 
@@ -258,28 +258,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		if (BTCToSend > 0)
 			RefundBTC(backers[_from].btc_address ,BTCToSend); // event message to manually refund BTC
     }
-/*
-    function receiveApprovalOLD(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
-        if (msg.sender != address(rlc)) throw; 
-        if (bytes(_extraData).length != 0) throw;  // no extradata needed
-        if (bytes(_extraData2).length!= 0) throw;  // no extradata needed
-        if (_value != backers[_from].rlcSent) throw; // compare value from backer balance
-        if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
-		uint ETHToSend = backers[_from].weiReceived;
-		backers[_from].weiReceived=0;
-		uint BTCToSend = backers[_from].satoshiReceived;
-		backers[_from].satoshiReceived = 0;
-		if (ETHToSend > 0) {
-			if (_from.send(ETHToSend)) {
-					RefundETH(_from,ETHToSend);
-				} else {
-					backers[_from].weiReceived = ETHToSend;
-				}
-		}
-		if (BTCToSend > 0)
-			RefundBTC(backers[msg.sender].btc_address ,BTCToSend); // event message to manually refund BTC
-    }
-*/
 
 	/*
 	* Update the rate RLC per ETH, computed externally by using the BTCETH index on kraken every 10min
