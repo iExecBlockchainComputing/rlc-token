@@ -195,7 +195,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  backer.rlcSent = safeAdd(backer.rlcSent , rlcToSend);
 	  backer.btc_address = btc_address;
 	  backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
-	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collcted during the crowdfunding 
+	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collected during the crowdfunding 
 	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
 	  
