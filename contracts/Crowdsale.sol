@@ -202,11 +202,11 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  ReceivedBTC(beneficiary, btc_address, BTCReceived);
 	}
 	
-	function isMinCapReached() internal returns (bool) {
+	function isMinCapReached() internal constant returns (bool) {
 		return (RLCSentToETH + RLCSentToBTC ) > minCap;
 	}
 
-	function isMaxCapReached() internal returns (bool) { 
+	function isMaxCapReached() internal constant returns (bool) { 
 		return (RLCSentToETH + RLCSentToBTC ) == maxCap;
 	}
 
@@ -222,7 +222,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*
 	  Compute the RLC bonus according to the investment period
 	*/
-	function bonus(uint amount) internal returns (uint) {
+	function bonus(uint amount) internal constant returns (uint) {
 	  if (now < (startBlock + 10 days)) return (amount + amount/5);  // bonus 20%
 	  if (now < startBlock + 20 days) return (amount + amount/10);  // bonus 10%
 	  return amount;
