@@ -16,7 +16,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   address public burnAddress;
   uint256 public totalSupply;
   bool public locked;
-  uint public unlockBlock;
+  //uint public unlockBlock;
 
   mapping(address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
@@ -34,7 +34,7 @@ contract RLC is ERC20, SafeMath, Ownable {
   function RLC() {
     // lock the transfer function during the crowdsale
     locked = true;
-    unlockBlock=  now + 45 days; // (testnet) - for mainnet put the block number
+    //unlockBlock=  now + 45 days; // (testnet) - for mainnet put the block number
 
     initialSupply = 87000000000000000;
     totalSupply = initialSupply;
@@ -45,9 +45,9 @@ contract RLC is ERC20, SafeMath, Ownable {
     burnAddress = 0x1b32000000000000000000000000000000000000;
   }
 
-  function unlock() {
-    if (now < unlockBlock) throw;
-    if (!locked) throw;   // to allow only 1 call
+  function unlock() onlyOwner {
+    //if (now < unlockBlock) throw;
+    //if (!locked) throw;   // to allow only 1 call
     locked = false;
   }
 

@@ -15,6 +15,8 @@ import "./Pausable.sol";
 
 // To do : create a generic test with parameter to run abitrary simulation
 // To test: RLC allowance when reach Maxcap, Unlock transfer, pausable
+// Add unlock transfer in finalise 
+// test transfer before and after finalise
 
 
 contract Crowdsale is SafeMath, PullPayment, Pausable {
@@ -299,6 +301,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	    if (!transferRLC(reserve,rlc_reserve)) throw;	
 	    if (!transferRLC(bounty,rlc_bounty)) throw;
 	    rlc.burn(rlc.totalSupply() - RLCEmitted);
+	    rlc.unlock();
 		crowdsaleClosed = true;
 	}
 }
