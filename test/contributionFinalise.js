@@ -63,7 +63,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(firstcust);
       }).then(function(result){
         console.log("payment 1 acc2 via ETH",result.toNumber());
-        //assert.equal(result.toNumber(),240000000000,"RLC send")  
+        assert.equal(result.toNumber(),240000000000,"RLC send")  
 
 // first payment with acount 3
         return web3.eth.sendTransaction({from:seccust, to: CrowdContract.address , value: web3.toWei(1, "ether"), gas:3000000});
@@ -71,7 +71,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(seccust);
       }).then(function(result){
         console.log("payment 1 acc3 via ETH",result.toNumber());
-        //assert.equal(result.toNumber(),240000000000,"RLC send")  
+        assert.equal(result.toNumber(),240000000000,"RLC send")  
 
 // first payment in BTC with account 4
         return CrowdContract.receiveBTC(thirdcust, "0x004", 200000, "tsxid", {from:btcproxy ,gas:3000000});
@@ -79,7 +79,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(thirdcust);
       }).then(function(result){
         console.log("payment 1 acc4 via BTC",result.toNumber());
-        //assert.equal(result.toNumber(),12000000000,"RLC send")  
+        assert.equal(result.toNumber(),12000000000,"RLC send")  
 
 // first payment in BTC with account 5, reach the min cap
         return CrowdContract.receiveBTC(fourthcust, "0x005", 200000000000, "tsxid", {from:btcproxy ,gas:3000000});
@@ -87,7 +87,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(fourthcust);
       }).then(function(result){
         console.log("payment 1 acc5 via BTC",result.toNumber());
-        //assert.equal(result.toNumber(),12000000000000000,"RLC send")  
+        assert.equal(result.toNumber(),12000000000000000,"RLC send")  
 
 // second payment with acount 2, reached the min cap
         return web3.eth.sendTransaction({from:firstcust, to: CrowdContract.address , value: web3.toWei(100, "finney"), gas:3000000});
@@ -95,7 +95,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(firstcust);
       }).then(function(result){
         console.log("payment 2 acc2 via ETH",result.toNumber());
-        //assert.equal(result.toNumber(),264000000000,"RLC send min cap reached")  
+        assert.equal(result.toNumber(),264000000000,"RLC send min cap reached")  
 
 // second payment with acount 3, reached the min cap
         return web3.eth.sendTransaction({from:seccust, to: CrowdContract.address , value: web3.toWei(100, "finney"), gas:3000000});
@@ -103,7 +103,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(seccust);
       }).then(function(result){
         console.log("payment 2 acc3 via ETH",result.toNumber());
-        //assert.equal(result.toNumber(),264000000000,"RLC send min cap reached") 
+        assert.equal(result.toNumber(),264000000000,"RLC send min cap reached") 
 
 // second payment in BTC with account 4, reached the min cap
         return CrowdContract.receiveBTC(thirdcust, "0x004", 200000, "tsxid", {from:btcproxy ,gas:3000000});
@@ -111,7 +111,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(thirdcust);
       }).then(function(result){
         console.log("payment 2 acc4 via BTC",result.toNumber());
-        //assert.equal(result.toNumber(),24000000000,"RLC sent min cap reached")  
+        assert.equal(result.toNumber(),24000000000,"RLC sent min cap reached")  
 
 // second payment in BTC with account 5, reached the min cap
         return web3.eth.sendTransaction({from:fourthcust, to: CrowdContract.address , value: web3.toWei(100, "finney"), gas:3000000});
@@ -119,7 +119,7 @@ contract('Crowdsale', function(accounts) {
         return RLCcontract.balanceOf.call(fourthcust);
       }).then(function(result){
         console.log("payment 2 acc5 via ETH",result.toNumber());
-        //assert.equal(result.toNumber(),12000024000000000,"RLC sent")  
+        assert.equal(result.toNumber(),12000024000000000,"RLC sent")  
 
 // check total rlc sent via BTC and ETH payment
         return CrowdContract.RLCSentToETH();
@@ -187,10 +187,10 @@ contract('Crowdsale', function(accounts) {
         assert.equal(result.toNumber(),0,"No more token available")  
 
 // get the total burnt
-        return RLCcontract.balanceOf.call("0x1b32000000000000000000000000000000000000"); // reserve address
+        return RLCcontract.totalSupply.call(); // reserve address
       }).then(function(result){
-        console.log("Burnt token ",result.toNumber());
-        assert.equal(result.toNumber() + bountyRLC + reserveRLC + teamRLC + TotalRlcEmitETHBTC,87000000000000000,"We get the final right number")  
+        console.log("total supply after burn ",result.toNumber());
+        assert.equal(bountyRLC + reserveRLC + teamRLC + TotalRlcEmitETHBTC, result.toNumber(),"We get the final right number")  
 
       }).catch(function(err){
         console.log(err);
