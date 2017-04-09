@@ -98,7 +98,7 @@ https://github.com/iExecBlockchainComputing/rlc-token/blob/3d9aa99ba33bb035c5974
 Same with line 294.
 Same with lines 260–281.
 
->> corrected in # GF
+>> corrected in # 162fb7261ee3dbc13c2dfef89c69ffd3552ac15d
 
 - Remove unnecessary code in lines 101–104 of RLC.sol. Since solidity 0.4.0, contracts will throw by default when funds are sent, unless you add a payable fallback function.
 
@@ -115,7 +115,7 @@ Unlock function in RLC is unnecessary, and onlyUnlocked modifier could use unloc
 
 - Fix indentation of lines 250 to 258 of Crowdsale.sol.
 
->> corrected in # GF
+>> corrected in # 162fb7261ee3dbc13c2dfef89c69ffd3552ac15d
 
 Some state variables of RLC.sol could be constant for added safety.
 Some functions on Crowdsale.sol could be declared constant.
