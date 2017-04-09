@@ -38,7 +38,7 @@ Use of send is always risky and should be analyzed in detail. Two occurrences fo
 - Favor pull payments over push payments: line 255 is a pull payment, line 297 is a push payment. Consider changing line 297 to use asyncSend.
 For more info on this problem, see this note.
 
->> corrected in #
+>> The only push payment is on a onlyowner payment
 
 Usage of magic constants
 There are several magic constants in the contract code. Some examples are:
@@ -56,7 +56,7 @@ Formal security audits are not enough to be safe. We recommend implementing an a
 - Unused isMaxCapReached
 isMaxCapReached is not used in Crowdsale.sol, but seems like it could be used in line 186 or in the finalize function.
 
->> coorected in #
+>> No more used after 4e94def18e33f867e24b024f5770d51f07fd6425
 
 - Avoid duplicated code
 Duplicate code makes it harder to understand the code’s intention and thus, auditing the code correctly. It also increases the risk of introducing hidden bugs when modifying one of the copies of some code and not the others.
@@ -69,11 +69,11 @@ function transfer(address _to, uint _value) onlyUnlocked returns (bool success) 
 
 - Furthermore, the burn method is a close rewrite of transfer, consider having burn call transfer instead. 
 
->> corrected in #
+>> we decided not to follow this recommandation in order to favor code readbility
 
 Finally, Crowdsale.sol could use OpenZeppelin’s Ownable instead of implementing the same idea
 
->> corrected in #
+>> we decided not to follow this recommandation in order to favor code readbility, cause we have another modifier onlyBy()
 
 - Use latest version of Solidity
 Current code is written for an old version of solc (0.4.8). We recommend changing the solidity version pragma for the latest version (pragma solidity ^0.4.10;) to enforce latest compiler version to be used.
@@ -87,12 +87,12 @@ https://github.com/iExecBlockchainComputing/rlc-token/blob/3d9aa99ba33bb035c5974
 https://github.com/iExecBlockchainComputing/rlc-token/blob/3d9aa99ba33bb035c59740a621b1f21cd45cbac5/contracts/Pausable.sol#L22
 https://github.com/iExecBlockchainComputing/rlc-token/blob/3d9aa99ba33bb035c59740a621b1f21cd45cbac5/contracts/Ownable.sol
 
->> corrected in #
+>> corrected in 4e94def18e33f867e24b024f5770d51f07fd6425
 
 - Remove the closeCrowdsaleForRefund function (as the comment above it says). Not removing this function would be a severe security problem, but we mention it as an informational note because of the comment above it, which means the team is aware of this. 
 - Same with finalizeTEST.
 
->> corrected in #
+>> corrected in f48da7e3e3815fd78e75ef53dced66486519d8ba
 
 - Remove commented code on line 149 of Crowdsale.sol.
 Same with line 294.
@@ -102,16 +102,16 @@ Same with lines 260–281.
 
 - Remove unnecessary code in lines 101–104 of RLC.sol. Since solidity 0.4.0, contracts will throw by default when funds are sent, unless you add a payable fallback function.
 
->> corrected in #
+>> corrected in f48da7e3e3815fd78e75ef53dced66486519d8ba
 
 - Remove unnecessary variable burnAddress, and just set the balances to 0 to burn tokens.
 
->> corrected in #
+>> corrected in 88663507bb24baca23b79548214468cb5c320ca5
 
 - You probably want the unlock function in RLC to have the onlyOwner modifier. Even though there’s no real problem with other user to call the method, it’s recommended to have full control over when those important methods are called. 
 Unlock function in RLC is unnecessary, and onlyUnlocked modifier could use unlockBlock directly for its logic. 
 
->> corrected in #
+>> corrected in f48da7e3e3815fd78e75ef53dced66486519d8ba , The unlock method is now call in finalise 
 
 - Fix indentation of lines 250 to 258 of Crowdsale.sol.
 
@@ -120,14 +120,14 @@ Unlock function in RLC is unnecessary, and onlyUnlocked modifier could use unloc
 Some state variables of RLC.sol could be constant for added safety.
 Some functions on Crowdsale.sol could be declared constant.
 
->> corrected in #
+>> corrected in # bf1ccb5173d2a0a79eef7c566aef2880e595c664
 
 transferRLC function doesn’t add any functionality and may add confusion.
 
->> corrected in #
+>> corrected in # 4e94def18e33f867e24b024f5770d51f07fd6425
 
 Comments in lines 160 and 161 of Crowdsale.sol have typos: “collcted”.
 
->> corrected in #
+>> corrected in # d9c07a8d9aa7c82ab3ec52f7026f8a7ac393504a
 
 
