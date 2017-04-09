@@ -44,8 +44,6 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
 
   function unlock() onlyOwner {
-    //if (now < unlockBlock) throw;
-    //if (!locked) throw;   // to allow only 1 call
     locked = false;
   }
 

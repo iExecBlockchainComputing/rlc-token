@@ -40,7 +40,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	uint public BTCReceived;    // Number of BTC received
 	uint public RLCSentToETH;   // Number of RLC sent to ETH contributors
 	uint public RLCSentToBTC;   // Number of RLC sent to BTC contributors
-	uint public RLCEmitted;		// Number of RLC emitted 
 	uint public startBlock;     // Crowdsale start block
 	uint public endBlock;       // Crowdsale end block
 	uint public minCap;         // Minimum number of RLC to sell
@@ -59,7 +58,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	uint public rlc_team;		// amount of the team RLC 
 	
 	mapping(address => Backer) public backers; //backersETH indexed by their ETH address
-	//mapping(address => BackerBTC) public backersBTC; //backersBTC indexed by their (BTC,ETH) address
 
     // Auth modifier, if the msg.sender isn't the expected address, throw.
 	modifier onlyBy(address a){
@@ -68,14 +66,24 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	}
 
 	modifier minCapNotReached() {
-		if ((now<endBlock) || isMinCapReached() || (now > endBlock + 15 days)) throw;
+		if ((now<endBlock) || RLCSentToETH + RLCSentToBTC > minCap ) throw;
+		_;
+	}
+
+	modifier respectTimeFrame() {
+		if ((now < startBlock) || (now > endBlock )) throw;
+		_;
+	}
+
+	modifier checkForFinalize() {
+		if (RLCSentToETH + RLCSentToBTC < maxCap - 100000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
+		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
 		_;
 	}
 
 	/*
 	 *  /!\ FUNCTION FOR TEST ONLY - WILL BE REMOVE IN THE FINAL CONTRACT
 	 */
-
 	function closeCrowdsaleForRefund() {
 		endBlock = now;
 	}
@@ -84,23 +92,30 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		//moves the remaining ETH to the multisig address
 		if (!multisigETH.send(this.balance)) throw;
 		//moves RLC to the team, reserve and bounty address
-	    if (!transferRLC(team,rlc_team)) throw;
-	    if (!transferRLC(reserve,rlc_reserve)) throw;	
-	    if (!transferRLC(bounty,rlc_bounty)) throw;
+	    if (!rlc.transfer(team,rlc_team)) throw;
+	    if (!rlc.transfer(reserve,rlc_reserve)) throw;	
+	    if (!rlc.transfer(bounty,rlc_bounty)) throw;
+	    uint RLCEmitted = rlc_reserve + rlc_bounty + rlc_team + RLCSentToBTC + RLCSentToETH;
+	    if (RLCEmitted < rlc.totalSupply())
+			rlc.burn(rlc.totalSupply() - RLCEmitted);
 	    rlc.burn(rlc.totalSupply() - RLCEmitted);
 		crowdsaleClosed = true;
 	}
-
 	/*
 	 * /!\ END TEST FUNCTION
 	 */
 
-
+	/*
+	 * Event
+	 */
 	event ReceivedETH(address addr, uint value);
 	event ReceivedBTC(address addr, string from, uint value, string txid);
 	event RefundBTC(string to, uint value);
 	event Logs(address indexed from, uint amount, string value);
-	// Constructor of the contract.
+
+	/*
+	*	Constructor
+	*/
 	function Crowdsale(address _token, address _btcproxy) {
 		
 	  //set the different variables
@@ -114,41 +129,38 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  RLCSentToETH = 0;
 	  RLCSentToBTC = 0;
 	  minInvestETH = 100 finney; // 0.1 ether
-	  minInvestBTC = 100000;     // approx 1 USD or 0.00100000 BTC
+	  minInvestBTC = 1000000;     // approx 10 USD or 0.01000000 BTC
 	  startBlock = now ;            // now (testnet)
 	  endBlock =  now + 30 days;    // ever (testnet) startdate + 30 days
+	  //startBlock = 3511463; 		// approx 12 april 2pm TOFIX
+	  //endBlock =  3511463 + 30 days;    // ever (testnet) startdate + 30 days
 	  RLCPerETH = 200000000000;    // FIXME  will be update
 	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  minCap=12000000000000000;
 	  maxCap=60000000000000000;
-	  rlc_bounty=1700000000000000;		
-	  //rlc_reserve=17000000000000000;
-	  rlc_reserve=1700000000000000;
+	  rlc_bounty=1700000000000000;		// max 6000000 RLC
+	  rlc_reserve=1700000000000000;		// max 6000000 RLC
 	  rlc_team=12000000000000000;
-	  RLCEmitted = rlc_bounty + rlc_reserve + rlc_team;
 	}
 
 	/* 
 	* The fallback function corresponds to a donation in ETH
 	*/
-	function() payable	{
-	  receiveETH(msg.sender);
+	function() payable {
+		if (now > endBlock) throw;
+	  	receiveETH(msg.sender);
 	}
 
 	/*
 	*	Receives a donation in ETH
 	*/
-	function receiveETH(address beneficiary) stopInEmergency payable {
+	function receiveETH(address beneficiary) stopInEmergency payable respectTimeFrame {
 
 	  //don't accept funding under a predefined treshold
 	  if (msg.value < minInvestETH) throw;  
 
-	  // check if we are in the correct time slot
-	  if ((now < startBlock) || (now > endBlock )) throw;  
-
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((msg.value*RLCPerETH)/(1 ether));
-	  //uint rlcToSend = bonus((msg.value*RLCPerFINNEY)/(1 finney));
 
 	  // check if we are not reaching the maxCap by accepting this donation
 	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
@@ -156,7 +168,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  //update the backer
 	  Backer backer = backers[beneficiary];
 
-	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
+	  //if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
+	  if (!rlc.transfer(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
 
 	  backer.rlcSent = safeAdd(backer.rlcSent, rlcToSend);
 	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collcted during the crowdfunding     
@@ -171,28 +184,23 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*
 	* receives a donation in BTC
 	*/
+	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency onlyBy(BTCproxy) returns (bool res){
 
-	// Refund BTC in JS if function throw
-
-	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency onlyBy(BTCproxy){
-	  //don't accept funding under a predefined treshold
-	  if (value < minInvestBTC) throw;  
-
-	  // if we are in the correct time slot
-	  if ((now < startBlock) || (now > endBlock )) throw;  
+	  if (value < minInvestBTC) throw;  // the verif is made by btcproxy 
 
 	  //compute the number of RLC to send
 	  uint rlcToSend = bonus((value*RLCPerSATOSHI));
 
-	  // check if we are not reaching the maxCap
-	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) throw;
+	  // check if we are not reaching the maxCap (even check by btcproxy before submit)
+	  if ((rlcToSend + RLCSentToETH + RLCSentToBTC) > maxCap) {
+	  	RefundBTC(btc_address , value);
+	  	return false;
+	  }
 
 	  //update the backer
 	  Backer backer = backers[beneficiary];
-
-	  // if the min cap is reached, token transfer happens immediately possibly along
-	  // with the previous donation
-	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
+ 
+	  if (!rlc.transfer(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
 
 	  backer.rlcSent = safeAdd(backer.rlcSent , rlcToSend);
 	  backer.btc_address = btc_address;
@@ -201,23 +209,20 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 	  emitRLC(rlcToSend);
 	  ReceivedBTC(beneficiary, btc_address, BTCReceived, txid);
-	}
-	
-	function isMinCapReached() internal constant returns (bool) {
-		return (RLCSentToETH + RLCSentToBTC ) > minCap;
+	  return true;
 	}
 
-	function isMaxCapReached() internal constant returns (bool) { 
-		return (RLCSentToETH + RLCSentToBTC ) == maxCap;
-	}
-
-	// Compute the variable part
+	/*
+	  Compute the varaible part
+	*/
 	function emitRLC(uint amount) internal {
+		//rlc_bounty+=amount/10;      // bounty is 10% of the crowdsale
+		rlc_bounty = safeAdd(rlc_bounty, amount/10);
+		//rlc_team+=amount/20;        // team is 5% of the crowdsale
+		rlc_team = safeAdd(rlc_team, amount/20);
+		//rlc_reserve+=amount/10; 	// contingency is 10% of the crowdsale
+		rlc_reserve = safeAdd(rlc_reserve, amount/10);
 		Logs(msg.sender ,amount, "emitRLC");
-		rlc_bounty+=amount/10;      // bounty is 10% of the crowdsale
-		rlc_team+=amount/20;        // team is 5% of the crowdsale
-		rlc_reserve+=amount/10; 	// contingency is 10% of the crowdsale
-		RLCEmitted+=amount + amount/4;	// adjust the total number of RLC emitted
 	}
 
 	/*
@@ -228,20 +233,12 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  if (now < startBlock + 20 days) return (amount + amount/10);  // bonus 10%
 	  return amount;
 	}
-	
-	/*
-	 * Transfer RLC to backers
-	 * Assumes that the owner of the token contract and the crowdsale contract is the same
-	 */
-	function transferRLC(address to, uint amount) internal returns (bool) {
-	  return rlc.transfer(to, amount);
-	}
+
 
 	/* 
 	 * When mincap is not reach backer can call the approveAndCall function of the RLC token contract
 	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
 	 */
-
     function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
         if (msg.sender != address(rlc)) throw; 
         if (_extraData.length != 0) throw;  // no extradata needed
@@ -269,16 +266,29 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*	
 	* Finalize the crowdsale, should be called after the refund period
 	*/
-	function finalize() onlyBy(owner) {
-		//if ((now < endBlock + 15 days ) || (now > endBlock + 60 days)) throw;
-		if (!isMaxCapReached() && now < endBlock + 15 days) throw;
+	function finalize() checkForFinalize onlyBy(owner) {
+		// check
+		if (RLCSentToETH + RLCSentToBTC < maxCap - 50000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
+		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
 		//moves the remaining ETH to the multisig address
 		if (!multisigETH.send(this.balance)) throw;
 		//moves RLC to the team, reserve and bounty address
-	    if (!transferRLC(team,rlc_team)) throw;
-	    if (!transferRLC(reserve,rlc_reserve)) throw;	
-	    if (!transferRLC(bounty,rlc_bounty)) throw;
-	    rlc.burn(rlc.totalSupply() - RLCEmitted);
+		if (rlc_reserve > 6000000000000000){
+			if(!rlc.transfer(reserve,6000000000000000)) throw; // max cap 6000000RLC
+			rlc_reserve = 6000000000000000;
+		} else {
+			if(!rlc.transfer(reserve,rlc_reserve)) throw;  
+		}
+		if (rlc_bounty > 6000000000000000){
+			if(!rlc.transfer(bounty,6000000000000000)) throw; // max cap 6000000RLC
+			rlc_bounty = 6000000000000000;
+		} else {
+			if(!rlc.transfer(bounty,rlc_bounty)) throw;
+		}
+	    if (!rlc.transfer(team,rlc_team)) throw;
+	    uint RLCEmitted = rlc_reserve + rlc_bounty + rlc_team + RLCSentToBTC + RLCSentToETH;
+	    if (RLCEmitted < rlc.totalSupply())					// necessary check for reserve and bounty maxcap
+			rlc.burn(rlc.totalSupply() - RLCEmitted);
 	    rlc.unlock();
 		crowdsaleClosed = true;
 	}
