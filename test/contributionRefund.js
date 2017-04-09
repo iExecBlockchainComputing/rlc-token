@@ -20,8 +20,6 @@ contract('Crowdsale', function(accounts) {
     var acc4RLCBal;
     var crowdContractBal;
 
-
-
     return RLC.deployed({from: accounts[0]}).then(function(instance){
       RLCcontract = instance;
 
@@ -108,13 +106,13 @@ contract('Crowdsale', function(accounts) {
           crowdContractBal = result.toNumber();
 
 // first payment in BTC with account 4
-        return CrowdContract.receiveBTC(accounts[4], "0x004", 200000, "tsxid", {from:accounts[1] ,gas:300000});
+        return CrowdContract.receiveBTC(accounts[4], "0x004", 2000000, "tsxid", {from:accounts[1] ,gas:300000});
       }).then(function(result){
         return RLCcontract.balanceOf.call(accounts[4]);
       }).then(function(result){
         console.log("payment 1 acc4 via BTC",result.toNumber());
         acc4RLCbal = result.toNumber();
-        assert.equal(result.toNumber(),12000000000,"RLC send BTC") 
+        assert.equal(result.toNumber(),120000000000,"RLC send BTC") 
 
 // manually set crowdsale to the end (temp hack for test only)
         return CrowdContract.closeCrowdsaleForRefund()
@@ -167,7 +165,7 @@ contract('Crowdsale', function(accounts) {
         // check other value rlc_bounty rlc_team rlc_reserve RLCEmitted
         return CrowdContract.rlc_bounty();
       }).then(function(result){
-        assert.equal(result.toNumber(),1700049200000000,"rlc bounty part")  
+        assert.equal(result.toNumber(),1700060000000000,"rlc bounty part")  
       }).catch(function(err){
         console.log(err);
     });
