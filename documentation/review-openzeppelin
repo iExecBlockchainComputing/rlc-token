@@ -18,7 +18,7 @@ We haven’t found any severe security problems with the code.
 
 There are many unchecked math operations in the code. It’s always better to be safe and perform checked operations. Consider using a safe math library, or performing pre-condition checks on any math operation.
 
->> corrected in #
+>> corrected in #27db1c2fd774bf1f9ed64a8373911d3ac975773a
 
 - Timestamp usage
 
