@@ -75,30 +75,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	}
 
 	/*
-	 *  /!\ FUNCTION FOR TEST ONLY - WILL BE REMOVE IN THE FINAL CONTRACT
-	 */
-	function closeCrowdsaleForRefund() {
-		endBlock = now;
-	}
-	// same than finalise() without modifier
-	function finalizeTEST() onlyBy(owner) {
-		//moves the remaining ETH to the multisig address
-		if (!multisigETH.send(this.balance)) throw;
-		//moves RLC to the team, reserve and bounty address
-	    if (!rlc.transfer(team,rlc_team)) throw;
-	    if (!rlc.transfer(reserve,rlc_reserve)) throw;	
-	    if (!rlc.transfer(bounty,rlc_bounty)) throw;
-	    uint RLCEmitted = rlc_reserve + rlc_bounty + rlc_team + RLCSentToBTC + RLCSentToETH;
-	    if (RLCEmitted < rlc.totalSupply())
-			rlc.burn(rlc.totalSupply() - RLCEmitted);
-	    rlc.burn(rlc.totalSupply() - RLCEmitted);
-		crowdsaleClosed = true;
-	}
-	/*
-	 * /!\ END TEST FUNCTION
-	 */
-
-	/*
 	 * Event
 	 */
 	event ReceivedETH(address addr, uint value);
