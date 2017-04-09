@@ -1,4 +1,7 @@
-iEx.ec RLC Token Audit
+******************************************************************
+**		iEx.ec RLC Token Audit / OpenZeppelin		**
+******************************************************************
+
 
 The iEx.ec team asked us to review and audit their new RLC token contract code. We looked at their contracts and now publish our results.
 The audited contracts are at their iExecBlockchainComputing/rlc-token GitHub repo. The version used for this report is commit 3d9aa99ba33bb035c59740a621b1f21cd45cbac5. The main contract files are Crowdsale.sol and RLC.sol.
@@ -95,7 +98,7 @@ https://github.com/iExecBlockchainComputing/rlc-token/blob/3d9aa99ba33bb035c5974
 Same with line 294.
 Same with lines 260–281.
 
->> corrected in #
+>> corrected in # GF
 
 - Remove unnecessary code in lines 101–104 of RLC.sol. Since solidity 0.4.0, contracts will throw by default when funds are sent, unless you add a payable fallback function.
 
@@ -112,7 +115,7 @@ Unlock function in RLC is unnecessary, and onlyUnlocked modifier could use unloc
 
 - Fix indentation of lines 250 to 258 of Crowdsale.sol.
 
->> corrected in #
+>> corrected in # GF
 
 Some state variables of RLC.sol could be constant for added safety.
 Some functions on Crowdsale.sol could be declared constant.

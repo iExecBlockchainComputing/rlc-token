@@ -13,12 +13,6 @@ import "./Pausable.sol";
 
  */
 
-// To do : create a generic test with parameter to run abitrary simulation
-// To test: RLC allowance when reach Maxcap, Unlock transfer, pausable
-// Add unlock transfer in finalise 
-// test transfer before and after finalise
-// modify the finalise to be able to finalise just after the crowdsale if mincapisreached
-
 contract Crowdsale is SafeMath, PullPayment, Pausable {
 
   	struct Backer {
@@ -59,9 +53,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	uint public rlc_team;		// amount of the team RLC 
 	
 	mapping(address => Backer) public backers; //backersETH indexed by their ETH address
-	//mapping(address => BackerBTC) public backersBTC; //backersBTC indexed by their (BTC,ETH) address
 
-    // Auth modifier, if the msg.sender isn't the expected address, throw.
+	// Auth modifier, if the msg.sender isn't the expected address, throw.
 	modifier onlyBy(address a){
 	    if (msg.sender != a) throw;  
 	    _;
@@ -117,8 +110,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  minInvestBTC = 100000;     // approx 1 USD or 0.00100000 BTC
 	  startBlock = now ;            // now (testnet)
 	  endBlock =  now + 30 days;    // ever (testnet) startdate + 30 days
-	  RLCPerETH = 200000000000;    // FIXME  will be update
-	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
+	  RLCPerETH = 200000000000;    // FIXME  will be updated
+	  RLCPerSATOSHI = 50000;       // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  minCap=12000000000000000;
 	  maxCap=60000000000000000;
 	  rlc_bounty=1700000000000000;		
@@ -159,8 +152,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  if (!transferRLC(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
 
 	  backer.rlcSent = safeAdd(backer.rlcSent, rlcToSend);
-	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collcted during the crowdfunding     
-	  ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collcted during the crowdfunding
+	  backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collected during the crowdfunding     
+	  ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collected during the crowdfunding
 	  RLCSentToETH = safeAdd(RLCSentToETH, rlcToSend);
 
 	  emitRLC(rlcToSend);
@@ -270,17 +263,16 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	* Finalize the crowdsale, should be called after the refund period
 	*/
 	function finalize() onlyBy(owner) {
-		//if ((now < endBlock + 15 days ) || (now > endBlock + 60 days)) throw;
-		if (!isMaxCapReached() && now < endBlock + 15 days) throw;
-		//moves the remaining ETH to the multisig address
-		if (!multisigETH.send(this.balance)) throw;
-		//moves RLC to the team, reserve and bounty address
-	    if (!transferRLC(team,rlc_team)) throw;
-	    if (!transferRLC(reserve,rlc_reserve)) throw;	
-	    if (!transferRLC(bounty,rlc_bounty)) throw;
-	    rlc.burn(rlc.totalSupply() - RLCEmitted);
-	    rlc.unlock();
-		crowdsaleClosed = true;
+	  if (!isMaxCapReached() && now < endBlock + 15 days) throw;
+	  //moves the remaining ETH to the multisig address
+	  if (!multisigETH.send(this.balance)) throw;
+	  //moves RLC to the team, reserve and bounty address
+	  if (!transferRLC(team,rlc_team)) throw;
+	  if (!transferRLC(reserve,rlc_reserve)) throw;	
+	  if (!transferRLC(bounty,rlc_bounty)) throw;
+	  rlc.burn(rlc.totalSupply() - RLCEmitted);
+	  rlc.unlock();
+	  crowdsaleClosed = true;
 	}
 }
 
