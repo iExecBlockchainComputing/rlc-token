@@ -18,11 +18,11 @@
         },
         {
           "name": "_extraData",
-          "type": "string"
+          "type": "bytes"
         },
         {
           "name": "_extraData2",
-          "type": "string"
+          "type": "bytes"
         }
       ],
       "name": "receiveApproval",
@@ -33,5 +33,5 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1488502813192
+  "updated_at": 1491741023136
 }
