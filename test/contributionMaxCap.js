@@ -65,6 +65,12 @@ contract('Crowdsale', function(accounts) {
         return CrowdContract.BTCproxy();
       }).then(function(result){
         console.log("btcproxy = ", result.toString(), " ",btcproxy);
+
+// start the crowdsale
+      return CrowdContract.start({from: owner});
+      }).then(function(result){
+
+
 /*
 // first payment in BTC with account 4
         return CrowdContract.receiveBTC(thirdcust, "0x004", 1000000000000, "tsxid", {from:btcproxy ,gas:3000000});

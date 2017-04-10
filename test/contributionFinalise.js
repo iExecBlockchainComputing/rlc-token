@@ -57,6 +57,10 @@ contract('Crowdsale', function(accounts) {
       }).then(function(result){
         console.log("btcproxy = ", result.toString(), " ",btcproxy);
 
+// start the crowdsale
+      return CrowdContract.start({from: owner});
+      }).then(function(result){
+
 // first payment with acount 2
         return web3.eth.sendTransaction({from:firstcust, to: CrowdContract.address , value: web3.toWei(1, "ether"), gas:3000000});
       }).then(function(result){

@@ -123,10 +123,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	  RLCSentToBTC = 0;
 	  minInvestETH = 100 finney; // 0.1 ether
 	  minInvestBTC = 1000000;     // approx 10 USD or 0.01000000 BTC
-	  startBlock = now ;            // now (testnet)
-	  endBlock =  now + 30 days;    // ever (testnet) startdate + 30 days
-	  //startBlock = 3511463; 		// approx 12 april 2pm TOFIX
-	  //endBlock =  3511463 + 30 days;    // ever (testnet) startdate + 30 days
+	  startBlock = 0 ;            	// should wait for the call of the function start
+	  endBlock =  0;  				// should wait for the call of the function start
 	  RLCPerETH = 200000000000;    // FIXME  will be update
 	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
 	  minCap=12000000000000000;
@@ -142,6 +140,11 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	function() payable {
 		if (now > endBlock) throw;
 	  receiveETH(msg.sender);
+	}
+
+	function start() onlyBy(owner) {
+	  startBlock = now ;            
+	  endBlock =  now + 30 days;    
 	}
 
 	/*
@@ -176,7 +179,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*
 	* receives a donation in BTC
 	*/
-	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency onlyBy(BTCproxy) returns (bool res){
+	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency respectTimeFrame onlyBy(BTCproxy) returns (bool res){
 
 	  if (value < minInvestBTC) throw;  // the verif is made by btcproxy 
 
@@ -223,7 +226,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
 	/* 
 	 * When mincap is not reach backer can call the approveAndCall function of the RLC token contract
-	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
+	 * with this crowdsale contract on parameter with all the RLC they get in order to be refund
 	 */
   function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
       if (msg.sender != address(rlc)) throw; 

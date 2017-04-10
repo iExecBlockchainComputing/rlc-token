@@ -65,6 +65,10 @@ contract('Crowdsale', function(accounts) {
       }).then(function(result){
         console.log("btcproxy = ", result.toString(), " ",accounts[1]);
 
+// start the crowdsale
+      return CrowdContract.start({from: accounts[0]});
+      }).then(function(result){
+
 // get balance before payment
         return web3.eth.getBalance(accounts[2]);
         }).then(function(result){
