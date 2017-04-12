@@ -68,12 +68,6 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		_;
 	}
 
-	modifier checkForFinalize() {
-		if (RLCSentToETH + RLCSentToBTC < maxCap - 100000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
-		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
-		_;
-	}
-
 	/*
 	 * Event
 	 */
@@ -234,9 +228,9 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*	
 	* Finalize the crowdsale, should be called after the refund period
 	*/
-	function finalize() checkForFinalize onlyBy(owner) {
+	function finalize() onlyBy(owner) {
 		// check
-		if (RLCSentToETH + RLCSentToBTC < maxCap - 50000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
+		if (RLCSentToETH + RLCSentToBTC < maxCap - 100000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
 		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
 		//moves the remaining ETH to the multisig address
 		if (!multisigETH.send(this.balance)) throw;
