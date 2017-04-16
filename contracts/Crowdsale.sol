@@ -80,6 +80,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	 *	Constructor
 	 */
 	function Crowdsale(address _token, address _btcproxy) {
+<<<<<<< HEAD
 
 		//set the different variables
 		owner = msg.sender;
@@ -102,6 +103,30 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		rlc_bounty=1700000000000000;		// max 6000000 RLC
 		rlc_reserve=1700000000000000;		// max 6000000 RLC
 		rlc_team=12000000000000000;
+=======
+		
+	  //set the different variables
+	  owner = msg.sender;
+	  BTCproxy = _btcproxy; // to change
+	  rlc = RLC(_token); 	// RLC contract address
+	  multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
+	  team = 0x1000000000000000000000000000000000000000;
+	  reserve = 0x2000000000000000000000000000000000000000;
+	  bounty = 0x3000000000000000000000000000000000000000;
+	  RLCSentToETH = 0;
+	  RLCSentToBTC = 0;
+	  minInvestETH = 100 finney; // 0.1 ether
+	  minInvestBTC = 1000000;     // approx 10 USD or 0.01000000 BTC
+	  startBlock = 0 ;            	// should wait for the call of the function start
+	  endBlock =  0;  				// should wait for the call of the function start
+	  RLCPerETH = 200000000000;    // FIXME  will be update
+	  RLCPerSATOSHI = 50000;         // 5000 RLC par BTC == 50,000 RLC per satoshi
+	  minCap=12000000000000000;
+	  maxCap=60000000000000000;
+	  rlc_bounty=1700000000000000;		// max 6000000 RLC
+	  rlc_reserve=1700000000000000;		// max 6000000 RLC
+	  rlc_team=12000000000000000;
+>>>>>>> c307ef4cc2888f1c9b69ca177c3e1702f431e184
 	}
 
 	/* 
@@ -118,6 +143,11 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	function start() onlyBy(owner) {
 		startBlock = now ;            
 		endBlock =  now + 30 days;    
+	}
+
+	function start() onlyBy(owner) {
+	  startBlock = now ;            
+	  endBlock =  now + 30 days;    
 	}
 
 	/*
@@ -150,6 +180,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	}
 	
 	/*
+<<<<<<< HEAD
 	 * receives a donation in BTC
 	 */
 	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency respectTimeFrame onlyBy(BTCproxy) returns (bool res){
@@ -176,6 +207,34 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		emitRLC(rlcToSend);
 		ReceivedBTC(beneficiary, btc_address, rlcToSend, txid);
 		return true;
+=======
+	* receives a donation in BTC
+	*/
+	function receiveBTC(address beneficiary, string btc_address, uint value, string txid) stopInEmergency respectTimeFrame onlyBy(BTCproxy) returns (bool res){
+
+	  if (value < minInvestBTC) throw;  // the verif is made by btcproxy 
+
+    //compute the number of RLC to send
+    uint rlcToSend = bonus(safeMul(value,RLCPerSATOSHI));
+	  if (safeAdd(rlcToSend, safeAdd(RLCSentToETH, RLCSentToBTC)) > maxCap) {
+	  	RefundBTC(btc_address , value);
+	  	return false;
+	  }
+
+	  //update the backer
+	  Backer backer = backers[beneficiary];
+ 
+	  if (!rlc.transfer(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
+
+	  backer.rlcSent = safeAdd(backer.rlcSent , rlcToSend);
+	  backer.btc_address = btc_address;
+	  backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
+	  BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collected during the crowdfunding 
+	  RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
+	  emitRLC(rlcToSend);
+	  ReceivedBTC(beneficiary, btc_address, BTCReceived, txid);
+	  return true;
+>>>>>>> c307ef4cc2888f1c9b69ca177c3e1702f431e184
 	}
 
 	/*
@@ -199,7 +258,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
 	/* 
 	 * When mincap is not reach backer can call the approveAndCall function of the RLC token contract
-	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
+	 * with this crowdsale contract on parameter with all the RLC they get in order to be refund
 	 */
 	function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
 		if (msg.sender != address(rlc)) throw; 
