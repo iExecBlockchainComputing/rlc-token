@@ -68,12 +68,10 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		_;
 	}
 
-	modifier checkForFinalize() {
-		if (RLCSentToETH + RLCSentToBTC < maxCap - 100000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
-		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
-		_;
-	}
-
+	modifier onlyPayloadSize(uint size) {
+	    assert(msg.data.length == size + 4);
+	    _;
+	  }
 	/*
 	 *  /!\ FUNCTION FOR TEST ONLY - WILL BE REMOVE IN THE FINAL CONTRACT
 	 */
@@ -150,16 +148,15 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*
 	*	Receives a donation in ETH
 	*/
-	function receiveETH(address beneficiary) stopInEmergency payable respectTimeFrame {
+	function receiveETH(address beneficiary) internal stopInEmergency  respectTimeFrame  {
 
 	  //don't accept funding under a predefined treshold
-	  if (msg.value < minInvestETH) throw;  
+	  if (msg.value < minInvestETH) throw; 
+      //compute the number of RLC to send
+      uint rlcToSend = bonus(safeMul(msg.value,RLCPerETH)/(1 ether));
 
-    //compute the number of RLC to send
-    uint rlcToSend = bonus(safeMul(msg.value,RLCPerETH)/(1 ether));
-
-    // check if we are not reaching the maxCap by accepting this donation
-    if (safeAdd(rlcToSend, safeAdd(RLCSentToETH, RLCSentToBTC)) > maxCap) throw;
+      // check if we are not reaching the maxCap by accepting this donation
+      if (safeAdd(rlcToSend, safeAdd(RLCSentToETH, RLCSentToBTC)) > maxCap) throw;
 
 	  //update the backer
 	  Backer backer = backers[beneficiary];
@@ -255,7 +252,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*	
 	* Finalize the crowdsale, should be called after the refund period
 	*/
-	function finalize() checkForFinalize onlyBy(owner) {
+	function finalize() onlyBy(owner) {
 		// check
 		if (RLCSentToETH + RLCSentToBTC < maxCap - 50000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
 		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 

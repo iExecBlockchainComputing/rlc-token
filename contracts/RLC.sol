@@ -26,6 +26,11 @@ contract RLC is ERC20, SafeMath, Ownable {
     _;
   }
 
+  modifier onlyPayloadSize(uint size) {
+    assert(msg.data.length == size + 4);
+    _;
+  }
+
   /*
    *  The RLC Token created with the time at which the crowdsale end
    */
@@ -54,7 +59,7 @@ contract RLC is ERC20, SafeMath, Ownable {
     return true;
   }
 
-  function transfer(address _to, uint _value) onlyUnlocked returns (bool success) {
+  function transfer(address _to, uint _value) onlyUnlocked onlyPayloadSize(2 * 32) returns (bool success) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
     Transfer(msg.sender, _to, _value);
@@ -93,8 +98,4 @@ contract RLC is ERC20, SafeMath, Ownable {
     return allowed[_owner][_spender];
   }
   
-    /* This unnamed function is called whenever someone tries to send ether to it */
-    function () {
-        throw;     // Prevents accidental sending of ether
-    }
 }
