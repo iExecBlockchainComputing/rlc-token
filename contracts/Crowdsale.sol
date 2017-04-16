@@ -207,6 +207,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		if (_extraData2.length != 0) throw;  // no extradata needed
 		if (_value != backers[_from].rlcSent) throw; // compare value from backer balance
 		if (!rlc.transferFrom(_from, address(this), _value)) throw ; // get the token back to the crowdsale contract
+		if (!rlc.burn(_value)) throw ;
 		uint ETHToSend = backers[_from].weiReceived;
 		backers[_from].weiReceived=0;
 		uint BTCToSend = backers[_from].satoshiReceived;
