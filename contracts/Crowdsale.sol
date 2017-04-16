@@ -123,7 +123,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	/*
 	 *	Receives a donation in ETH
 	 */
-	function receiveETH(address beneficiary) stopInEmergency payable respectTimeFrame {
+	function receiveETH(address beneficiary) internal stopInEmergency respectTimeFrame {
 
 		//don't accept funding under a predefined treshold
 		if (msg.value < minInvestETH) throw;  
