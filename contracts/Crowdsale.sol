@@ -17,7 +17,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
   	struct Backer {
   	  uint weiReceived;	// Amount of ETH given
-	  string btc_address;  //store the btc address for full tracability
+	  string btc_address;  //store the btc address for full traceability
 	  uint satoshiReceived;	// Amount of BTC given
 	  uint rlcToSend;   	// rlc to distribute when the min cap is reached
 	  uint rlcSent;
@@ -26,7 +26,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	RLC 	public rlc;         // RLC contract reference
 	address public owner;       // Contract owner (iEx.ec team)
 	address public multisigETH; // Multisig contract that will receive the ETH
-	address public BTCproxy;	// addess of the BTC Proxy
+	address public BTCproxy;	// address of the BTC Proxy
 
 	uint public RLCPerETH;      // Number of RLC per ETH
 	uint public RLCPerSATOSHI;  // Number of RLC per SATOSHI
@@ -125,7 +125,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	 */
 	function receiveETH(address beneficiary) stopInEmergency payable respectTimeFrame {
 
-		//don't accept funding under a predefined treshold
+		//don't accept funding under a predefined threshold
 		if (msg.value < minInvestETH) throw;  
 
 		//compute the number of RLC to send
@@ -140,8 +140,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		if (!rlc.transfer(beneficiary, rlcToSend)) throw;     // Do the transfer right now 
 
 		backer.rlcSent = safeAdd(backer.rlcSent, rlcToSend);
-		backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collcted during the crowdfunding     
-		ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collcted during the crowdfunding
+		backer.weiReceived = safeAdd(backer.weiReceived, msg.value); // Update the total wei collected during the crowdsale     
+		ETHReceived = safeAdd(ETHReceived, msg.value); // Update the total wei collected during the crowdsale
 		RLCSentToETH = safeAdd(RLCSentToETH, rlcToSend);
 
 		emitRLC(rlcToSend);
@@ -171,7 +171,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		backer.rlcSent = safeAdd(backer.rlcSent , rlcToSend);
 		backer.btc_address = btc_address;
 		backer.satoshiReceived = safeAdd(backer.satoshiReceived, value);
-		BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collected during the crowdfunding 
+		BTCReceived =  safeAdd(BTCReceived, value);// Update the total satoshi collected during the crowdsale 
 		RLCSentToBTC = safeAdd(RLCSentToBTC, rlcToSend);
 		emitRLC(rlcToSend);
 		ReceivedBTC(beneficiary, btc_address, rlcToSend, txid);
@@ -179,7 +179,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	}
 
 	/*
-	 * Compute the varaible part
+	 * Compute the variable part
 	 */
 	function emitRLC(uint amount) internal {
 		rlc_bounty = safeAdd(rlc_bounty, amount/10);
@@ -199,7 +199,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 
 	/* 
 	 * When mincap is not reach backer can call the approveAndCall function of the RLC token contract
-	 * whith this crowdsale contract on parameter with all the RLC they get in order to be refund
+	 * with this crowdsale contract on parameter with all the RLC they get in order to be refund
 	 */
 	function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData, bytes _extraData2) minCapNotReached public {
 		if (msg.sender != address(rlc)) throw; 
@@ -231,7 +231,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	function finalize() onlyBy(owner) {
 		// check
 		if (RLCSentToETH + RLCSentToBTC < maxCap - 100000000000 && now < endBlock) throw; // cannot finalise before 30 day until maxcap is reached 
-		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donator have 15days to get refund 
+		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;  // if mincap is not reached donors have 15 days to get refund 
 		//moves the remaining ETH to the multisig address
 		if (!multisigETH.send(this.balance)) throw;
 		//moves RLC to the team, reserve and bounty address
@@ -252,7 +252,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		if (RLCEmitted < rlc.totalSupply())					// necessary check for reserve and bounty maxcap
 			  rlc.burn(rlc.totalSupply() - RLCEmitted);
 		rlc.unlock();
-			crowdsaleClosed = true;
+		crowdsaleClosed = true;
 	}
 }
 
