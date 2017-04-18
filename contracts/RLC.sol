@@ -26,6 +26,11 @@ contract RLC is ERC20, SafeMath, Ownable {
     _;
   }
 
+  modifier onlyPayloadSize(uint size) {
+    assert(msg.data.length == size + 4);
+    _;
+  }
+
   /*
    *  The RLC Token created with the time at which the crowdsale end
    */
@@ -47,21 +52,21 @@ contract RLC is ERC20, SafeMath, Ownable {
     locked = false;
   }
 
-  function burn(uint256 _value) returns (bool success){
+  function burn(uint256 _value) returns (bool){
     balances[msg.sender] = safeSub(balances[msg.sender], _value) ;
     totalSupply = safeSub(totalSupply, _value);
     Transfer(msg.sender, 0x0, _value);
     return true;
   }
 
-  function transfer(address _to, uint _value) onlyUnlocked returns (bool success) {
+  function transfer(address _to, uint _value) onlyUnlocked onlyPayloadSize(2 * 32) returns (bool) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
     Transfer(msg.sender, _to, _value);
     return true;
   }
 
-  function transferFrom(address _from, address _to, uint _value) onlyUnlocked returns (bool success) {
+  function transferFrom(address _from, address _to, uint _value) onlyUnlocked returns (bool) {
     var _allowance = allowed[_from][msg.sender];
     
     balances[_to] = safeAdd(balances[_to], _value);
@@ -75,17 +80,17 @@ contract RLC is ERC20, SafeMath, Ownable {
     return balances[_owner];
   }
 
-  function approve(address _spender, uint _value) returns (bool success) {
+  function approve(address _spender, uint _value) returns (bool) {
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
     return true;
   }
 
     /* Approve and then comunicate the approved contract in a single tx */
-  function approveAndCall(address _spender, uint256 _value, bytes _extraData, bytes _extraData2){    
+  function approveAndCall(address _spender, uint256 _value, bytes _extraData){    
       TokenSpender spender = TokenSpender(_spender);
       if (approve(_spender, _value)) {
-          spender.receiveApproval(msg.sender, _value, this, _extraData, _extraData2);
+          spender.receiveApproval(msg.sender, _value, this, _extraData);
       }
   }
 
@@ -93,8 +98,4 @@ contract RLC is ERC20, SafeMath, Ownable {
     return allowed[_owner][_spender];
   }
   
-    /* This unnamed function is called whenever someone tries to send ether to it */
-    function () {
-        throw;     // Prevents accidental sending of ether
-    }
 }
