@@ -12,8 +12,8 @@ contract RLC is ERC20, SafeMath, Ownable {
   string public symbol;
   uint8 public decimals;    //How many decimals to show.
   string public version = 'v0.1'; 
-  uint256 public initialSupply;
-  uint256 public totalSupply;
+  uint public initialSupply;
+  uint public totalSupply;
   bool public locked;
   //uint public unlockBlock;
 
