@@ -123,7 +123,7 @@ contract('Crowdsale', function(accounts) {
       }).then(function(result){
 
 // call the refund function acc2 , and the withdrawPaymentfunction (pullpayment)
-        return RLCcontract.approveAndCall(CrowdContract.address,acc2RLCbal,"","", {from:accounts[2] ,gas:300000}); // will throw if its not the right amount of RLC send back
+        return RLCcontract.approveAndCall(CrowdContract.address,acc2RLCbal,"", {from:accounts[2] ,gas:300000}); // will throw if its not the right amount of RLC send back
       }).then(function(result){
         return CrowdContract.withdrawPayments({from:accounts[2] ,gas:300000});
       }).then(function(result){
@@ -139,7 +139,7 @@ contract('Crowdsale', function(accounts) {
         assert.equal(result.toNumber(),0,"RLC send")  
 
 // call the refund function acc3, , and the withdrawPaymentfunction (pullpayment)
-        return RLCcontract.approveAndCall(CrowdContract.address,acc3RLCbal,"","", {from:accounts[3] ,gas:300000}); // will throw if its not the right amount of RLC send back
+        return RLCcontract.approveAndCall(CrowdContract.address,acc3RLCbal,"", {from:accounts[3] ,gas:300000}); // will throw if its not the right amount of RLC send back
       }).then(function(result){
         return CrowdContract.withdrawPayments({from:accounts[3] ,gas:300000});
       }).then(function(result){
@@ -161,7 +161,7 @@ contract('Crowdsale', function(accounts) {
           assert.notEqual(crowdContractBal,result.toNumber());
 
 // call the refund function acc4
-        return RLCcontract.approveAndCall(CrowdContract.address,acc4RLCbal,"","", {from:accounts[4] ,gas:300000}); // will throw if its not the right amount of RLC send back
+        return RLCcontract.approveAndCall(CrowdContract.address,acc4RLCbal,"", {from:accounts[4] ,gas:300000}); // will throw if its not the right amount of RLC send back
       }).then(function(result){
         // manually check on the log than we get the right event
 
