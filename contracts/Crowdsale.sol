@@ -92,7 +92,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 		minInvestBTC = 1000000;			// approx 10 USD or 0.01000000 BTC
 		startBlock = 0 ;            	// should wait for the call of the function start
 		endBlock =  0;  				// should wait for the call of the function start
-		RLCPerETH = 200000000000;		// will be update every 10min based on the kraken ETHBTC
+		//RLCPerETH = 200000000000;		// will be update every 10min based on the kraken ETHBTC
+		RLCPerETH = 2000000000000000;		// will be update every 10min based on the kraken ETHBTC * 10000 for test
 		RLCPerSATOSHI = 50000;			// 5000 RLC par BTC == 50,000 RLC per satoshi
 		minCap=12000000000000000;
 		maxCap=60000000000000000;
@@ -114,7 +115,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	 */
 	function start() onlyBy(owner) {
 		startBlock = now ;            
-		endBlock =  now + 30 days;    
+		endBlock =  now + 20 minutes;    
 	}
 
 	/*
@@ -213,7 +214,7 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	function finalize() onlyBy(owner) {
 		// check
 		if (RLCSentToETH + RLCSentToBTC < maxCap - 5000000000000 && now < endBlock) throw;	// cannot finalise before 30 day until maxcap is reached minus 1BTC
-		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 15 days) throw ;		// if mincap is not reached donors have 15days to get refund before we can finalise
+		if (RLCSentToETH + RLCSentToBTC < minCap && now < endBlock + 20 minutes) throw ;		// if mincap is not reached donors have 15days to get refund before we can finalise
 		if (!multisigETH.send(this.balance)) throw;											// moves the remaining ETH to the multisig address
 		if (rlc_reserve > 6000000000000000){												// moves RLC to the team, reserve and bounty address
 			if(!rlc.transfer(reserve,6000000000000000)) throw;								// max cap 6000000RLC
