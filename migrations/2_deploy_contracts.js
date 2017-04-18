@@ -7,7 +7,7 @@ module.exports = function(deployer, network) {
 		var owner = web3.eth.accounts[0];
 		var btcproxy = web3.eth.accounts[1];
   deployer.deploy(RLC, {from: owner}).then(function(){
-  	return deployer.deploy(Crowdsale,RLC.address,btcproxy);
+  	return deployer.deploy();
   });
 };
 

@@ -78,18 +78,18 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	*	Constructor
 	*/
 	//function Crowdsale() {
-	function Crowdsale(address _token, address _btcproxy) {
+	function Crowdsale() {
 		owner = msg.sender;
-		BTCproxy = _btcproxy;
-		rlc = RLC(_token);
-		multisigETH = 0x8cd6B3D8713df6aA35894c8beA200c27Ebe92550;
-		team = 0x1000000000000000000000000000000000000000;
-		reserve = 0x2000000000000000000000000000000000000000;
-		bounty = 0x3000000000000000000000000000000000000000;
+		BTCproxy = 0X0;
+		rlc = 0x0;
+		multisigETH = 0xAe307e3871E5A321c0559FBf0233A38c937B826A;
+		team = 0xd65380D773208a6Aa49472Bf55186b855B393298;
+		reserve = 0x24F6b37770C6067D05ACc2aD2C42d1Bafde95d48;
+		bounty = 0x8226a24dA0870Fb8A128E4Fc15228a9c4a5baC29;
 		RLCSentToETH = 0;
 		RLCSentToBTC = 0;
-		minInvestETH = 100 finney;		// 0.1 ether
-		minInvestBTC = 1000000;			// approx 10 USD or 0.01000000 BTC
+		minInvestETH = 1 ether;
+		minInvestBTC = 5000000;			// approx 50 USD or 0.05000000 BTC
 		startBlock = 0 ;            	// should wait for the call of the function start
 		endBlock =  0;  				// should wait for the call of the function start
 		RLCPerETH = 200000000000;		// will be update every 10min based on the kraken ETHBTC
