@@ -4,7 +4,6 @@ import "./Ownable.sol";
 import "./SafeMath.sol";
 import "./ERC20.sol";
 import "./TokenSpender.sol";
-
 contract RLC is ERC20, SafeMath, Ownable {
 
     /* Public variables of the token */
@@ -23,11 +22,6 @@ contract RLC is ERC20, SafeMath, Ownable {
   // lock transfer during the ICO
   modifier onlyUnlocked() {
     if (msg.sender != owner && locked) throw;
-    _;
-  }
-
-  modifier onlyPayloadSize(uint size) {
-    assert(msg.data.length == size + 4);
     _;
   }
 
@@ -59,7 +53,7 @@ contract RLC is ERC20, SafeMath, Ownable {
     return true;
   }
 
-  function transfer(address _to, uint _value) onlyUnlocked onlyPayloadSize(2 * 32) returns (bool) {
+  function transfer(address _to, uint _value) onlyUnlocked returns (bool) {
     balances[msg.sender] = safeSub(balances[msg.sender], _value);
     balances[_to] = safeAdd(balances[_to], _value);
     Transfer(msg.sender, _to, _value);
@@ -99,3 +93,4 @@ contract RLC is ERC20, SafeMath, Ownable {
   }
   
 }
+

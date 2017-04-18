@@ -80,8 +80,8 @@ contract Crowdsale is SafeMath, PullPayment, Pausable {
 	//function Crowdsale() {
 	function Crowdsale() {
 		owner = msg.sender;
-		BTCproxy = 0X0;
-		rlc = 0x0;
+		BTCproxy = 0x75c6cceb1a33f177369053f8a0e840de96b4ed0e;
+		rlc = RLC(0x607F4C5BB672230e8672085532f7e901544a7375);
 		multisigETH = 0xAe307e3871E5A321c0559FBf0233A38c937B826A;
 		team = 0xd65380D773208a6Aa49472Bf55186b855B393298;
 		reserve = 0x24F6b37770C6067D05ACc2aD2C42d1Bafde95d48;
