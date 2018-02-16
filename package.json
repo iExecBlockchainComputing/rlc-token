@@ -1,6 +1,6 @@
 {
   "name": "rlc-token",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "truffle.js",
   "directories": {
@@ -18,8 +18,5 @@
   "bugs": {
     "url": "https://github.com/iExecBlockchainComputing/rlc-token/issues"
   },
-  "homepage": "https://github.com/iExecBlockchainComputing/rlc-token#readme",
-  "dependencies": {
-    "ethereumjs-testrpc": "^3.0.3"
-  }
+  "homepage": "https://github.com/iExecBlockchainComputing/rlc-token#readme"
 }
